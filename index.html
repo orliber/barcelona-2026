@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>קוסטה בראווה + ברצלונה · 26.8–2.9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Assistant:wght@300;400;500;600;700&family=Heebo:wght@400;500;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sea:#0E4D5C; --sea-deep:#08303B; --water:#2FA6A0; --water-lt:#7FD1CB;
+    --sand:#F4EDDF; --card:#FCF9F2; --sand-deep:#E7DAC2;
+    --ink:#16262A; --ink-soft:#53656A;
+    --sun:#E0663C; --olive:#7E7136; --garnet:#A50044; --blau:#004D98; --plum:#6B4A73;
+    --line:rgba(22,38,42,.13); --line-soft:rgba(22,38,42,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:132px}
+  body{font-family:'Assistant',sans-serif;background:var(--sand);color:var(--ink);line-height:1.62;font-size:17px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+  ::selection{background:var(--water-lt)}
+
+  .hero{background:radial-gradient(120% 95% at 88% -5%,rgba(47,166,160,.32),transparent 58%),linear-gradient(158deg,var(--sea),var(--sea-deep));color:#F7F2E7;padding:52px 0 42px;position:relative;overflow:hidden}
+  .hero .wrap{position:relative;z-index:2}
+  .eyebrow{font-family:'Heebo';font-weight:600;letter-spacing:.3em;font-size:11.5px;text-transform:uppercase;color:var(--water-lt);margin-bottom:13px}
+  .hero h1{font-family:'Suez One',serif;font-weight:400;font-size:clamp(35px,7vw,57px);line-height:1.03;color:#FCF9F2;margin-bottom:9px}
+  .hero .sub{font-size:18px;color:#C2E0DD;max-width:48ch}
+  .facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:25px}
+  .fact{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.17);border-radius:11px;padding:9px 14px}
+  .fact b{display:block;font-family:'Heebo';font-weight:800;font-size:14px;color:#FCF9F2}
+  .fact span{font-size:11.5px;color:#9DC7C3}
+  .flights{margin-top:19px;padding-top:15px;border-top:1px solid rgba(255,255,255,.15);display:flex;flex-wrap:wrap;gap:5px 24px;font-size:13px;color:#C2E0DD}
+  .flights b{color:#FCF9F2;font-family:'Heebo';font-weight:600}
+  .wv{position:absolute;left:0;right:0;bottom:-1px;z-index:1;width:100%;height:36px;display:block}
+
+  .navbar{position:sticky;top:0;z-index:60;background:rgba(244,237,223,.94);backdrop-filter:blur(11px);border-bottom:1px solid var(--line)}
+  .navrow{display:flex;gap:6px;overflow-x:auto;padding:10px 20px;max-width:920px;margin:0 auto;scrollbar-width:none}
+  .navrow::-webkit-scrollbar{display:none}
+  .pill{flex:0 0 auto;font-family:'Heebo';font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--ink-soft);cursor:pointer;white-space:nowrap;transition:all .15s}
+  .pill:hover{border-color:var(--sea);color:var(--sea)}
+  .pill.on{background:var(--sea);border-color:var(--sea);color:#FCF9F2}
+  .pill:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+
+  .filterbar{background:var(--sand-deep);border-bottom:1px solid var(--line)}
+  .filterrow{display:flex;align-items:center;gap:7px;overflow-x:auto;padding:8px 20px;max-width:920px;margin:0 auto;scrollbar-width:none}
+  .filterrow::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;font-family:'Heebo';font-weight:600;font-size:12px;padding:5px 11px;border-radius:16px;border:1px solid rgba(22,38,42,.2);background:rgba(255,255,255,.55);color:var(--ink-soft);cursor:pointer;transition:all .15s}
+  .chip.on{background:var(--sun);border-color:var(--sun);color:#fff}
+  .chip.anchor.on{background:var(--sea);border-color:var(--sea)}
+  .chip:focus-visible{outline:2px solid var(--sea);outline-offset:2px}
+  .sep{width:1px;height:20px;background:rgba(22,38,42,.18);flex:0 0 auto;margin:0 2px}
+  .srch{flex:0 0 auto;width:132px;font-family:'Assistant';font-size:13px;padding:5px 11px;border-radius:16px;border:1px solid rgba(22,38,42,.2);background:rgba(255,255,255,.75);color:var(--ink)}
+  .srch:focus{outline:2px solid var(--sea);outline-offset:1px;width:180px}
+
+  section{padding:40px 0}
+  .sechead{display:flex;align-items:baseline;gap:12px;margin-bottom:22px}
+  .sechead h2{font-family:'Suez One',serif;font-weight:400;font-size:27px;color:var(--sea)}
+  .sechead .rule{flex:1;height:1px;background:var(--line)}
+  .sechead .count{font-family:'Heebo';font-weight:600;font-size:12px;color:var(--ink-soft)}
+
+  .day{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:17px;overflow:hidden;scroll-margin-top:138px}
+  .daytop{display:flex;align-items:center;gap:14px;padding:16px 21px;border-bottom:1px solid var(--line);position:relative;cursor:pointer;user-select:none}
+  .daytop::before{content:"";position:absolute;top:0;bottom:0;right:0;width:6px;background:var(--tag,var(--sea))}
+  .daytop:focus-visible{outline:2px solid var(--sun);outline-offset:-3px}
+  .dnum{font-family:'Suez One',serif;font-size:31px;line-height:1;color:var(--tag,var(--sea));min-width:38px;text-align:center}
+  .dmeta h3{font-family:'Heebo';font-weight:800;font-size:18px}
+  .dmeta .dt{font-size:12.5px;color:var(--ink-soft)}
+  .dmeta .stats{font-size:11.5px;color:var(--ink-soft);font-family:'Heebo';font-weight:600;margin-top:2px;opacity:.8}
+  .dtag{margin-inline-start:auto;font-family:'Heebo';font-weight:600;font-size:11px;background:var(--tagsoft,rgba(14,77,92,.1));color:var(--tag,var(--sea));padding:5px 11px;border-radius:18px;white-space:nowrap}
+  .caret{font-size:12px;color:var(--ink-soft);transition:transform .2s;margin-inline-start:9px}
+  .day.shut .caret{transform:rotate(-90deg)}
+  .day.shut .dbody{display:none}
+  .dbody{padding:5px 21px 19px}
+
+  .item{display:flex;gap:13px;padding:13px 0;border-bottom:1px dashed var(--line-soft)}
+  .item:last-child{border-bottom:none}
+  .item.hide{display:none}
+  .tm{font-family:'Heebo';font-weight:800;font-size:12.5px;color:var(--tag,var(--sea));min-width:54px;padding-top:3px}
+  .wt{flex:1;min-width:0}
+  .wt b{font-weight:700;font-size:16.5px;display:block}
+  .wt .what{font-size:13.5px;color:var(--plum);font-weight:600;margin-top:1px}
+  .wt p{font-size:14.5px;color:var(--ink-soft);margin-top:5px}
+  .tags{display:inline-flex;gap:5px;vertical-align:middle;margin-inline-start:7px}
+  .kind,.who,.drive,.cost{display:inline-block;font-family:'Heebo';font-weight:600;font-size:10.5px;letter-spacing:.04em;padding:2px 8px;border-radius:11px;white-space:nowrap}
+  .kind{background:var(--line-soft);color:var(--ink-soft)}
+  .who{background:rgba(107,74,115,.13);color:var(--plum)}
+  .drive{background:rgba(224,102,60,.13);color:var(--sun)}
+  .cost{background:rgba(126,113,54,.14);color:var(--olive)}
+  .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .btn{display:inline-flex;align-items:center;gap:5px;font-family:'Heebo';font-weight:600;font-size:12.5px;color:#fff;background:var(--sun);padding:5px 12px;border-radius:7px;text-decoration:none;transition:transform .12s,filter .12s}
+  .btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  .btn.t{background:transparent;color:var(--sea);border:1px solid rgba(14,77,92,.35)}
+
+  .item.bonus .tm::after{content:"בונוס";display:block;font-size:9px;font-weight:600;color:var(--ink-soft);margin-top:2px}
+  .item.anchor .tm::after{content:"עוגן";display:block;font-size:9px;font-weight:600;color:var(--water);margin-top:2px}
+  .star{background:linear-gradient(96deg,rgba(47,166,160,.13),rgba(47,166,160,.03));border-radius:11px;padding:13px 14px;margin:3px 0}
+
+  .day.match .daytop::before{background:linear-gradient(var(--garnet) 50%,var(--blau) 50%)}
+  .day.match .dnum,.day.match .tm{color:var(--garnet)}
+  .day.match .dtag{background:rgba(165,0,68,.1);color:var(--garnet)}
+
+  .note{background:rgba(107,74,115,.07);border-inline-start:3px solid var(--plum);border-radius:0 9px 9px 0;padding:10px 13px;margin:10px 0 0;font-size:13.5px;color:var(--ink-soft)}
+  .note b{color:var(--plum);font-family:'Heebo';font-weight:700}
+  .note.hot{background:rgba(224,102,60,.08);border-color:var(--sun)}
+  .note.hot b{color:var(--sun)}
+
+  .prog{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 19px;margin-bottom:15px;display:flex;align-items:center;gap:15px}
+  .bar{flex:1;height:9px;background:var(--sand-deep);border-radius:6px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--water),var(--sea));border-radius:6px;transition:width .35s}
+  .pnum{font-family:'Heebo';font-weight:900;font-size:18px;color:var(--sea);min-width:54px;text-align:center}
+  .prog small{font-size:12.5px;color:var(--ink-soft);font-family:'Heebo';font-weight:600}
+  .bgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .bcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px 19px}
+  .bcard h4{font-family:'Heebo';font-weight:800;font-size:15px;color:var(--sea);margin-bottom:11px;display:flex;align-items:center;gap:8px}
+  .bcard h4 em{font-style:normal;font-size:10.5px;font-weight:600;color:#fff;background:var(--sun);padding:2px 8px;border-radius:10px}
+  .task{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line-soft)}
+  .task:last-child{border-bottom:none}
+  .task input{margin-top:4px;width:17px;height:17px;accent-color:var(--sea);cursor:pointer;flex:0 0 auto}
+  .task label{cursor:pointer;flex:1}
+  .task label a{color:var(--blau);font-weight:700;font-size:13.8px;text-decoration:none}
+  .task label a:hover{text-decoration:underline}
+  .task label span{display:block;font-size:12.3px;color:var(--ink-soft)}
+  .task.done label a,.task.done label span{opacity:.42;text-decoration:line-through}
+
+  .warn{background:#FFF3E9;border:1px solid rgba(224,102,60,.35);border-radius:12px;padding:14px 17px;margin-bottom:17px;font-size:14.5px}
+  .warn b{color:var(--sun)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+  .eat{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:15px 17px}
+  .eat.pick{border-color:rgba(224,102,60,.45)}
+  .eat .top{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+  .eat h5{font-family:'Heebo';font-weight:800;font-size:15.5px}
+  .eat .rt{font-family:'Heebo';font-weight:700;font-size:12px;color:var(--olive);white-space:nowrap;margin-inline-start:auto}
+  .eat .loc{font-size:11.5px;color:var(--ink-soft);font-family:'Heebo';font-weight:600;margin-bottom:6px}
+  .eat p{font-size:13.8px;color:var(--ink-soft);margin-bottom:8px}
+  .eat .shut{color:var(--sun);font-weight:600;font-size:12.5px}
+  .subh{font-family:'Heebo';font-weight:800;font-size:16.5px;color:var(--sea);margin:24px 0 11px;display:flex;align-items:center;gap:9px}
+  .subh::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .plain{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:19px 21px;margin-bottom:13px}
+  .plain h4{font-family:'Heebo';font-weight:800;font-size:15px;color:var(--sea);margin-bottom:7px}
+  .plain p,.plain li{font-size:14.6px;color:var(--ink-soft)}
+  .plain li{margin-inline-start:19px;margin-bottom:6px}
+  .plain b{color:var(--ink)}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line-soft)}
+  th{font-family:'Heebo';font-weight:700;color:var(--sea);font-size:12.5px}
+  td:last-child,th:last-child{text-align:left;font-family:'Heebo';font-weight:600;white-space:nowrap}
+  tr.tot td{border-top:2px solid var(--line);border-bottom:none;font-family:'Heebo';font-weight:800;color:var(--sea);font-size:15px;padding-top:11px}
+
+  .empty{text-align:center;padding:26px;color:var(--ink-soft);font-size:15px;display:none}
+  .empty.show{display:block}
+  footer{background:var(--sea-deep);color:#9DC7C3;text-align:center;padding:25px;font-size:13px}
+  footer b{color:#FCF9F2;font-family:'Heebo'}
+  .prbtn{background:transparent;border:1px solid rgba(255,255,255,.3);color:#C2E0DD;font-family:'Heebo';font-weight:600;font-size:12.5px;padding:6px 14px;border-radius:7px;cursor:pointer;margin-top:11px}
+  .prbtn:hover{background:rgba(255,255,255,.1)}
+  .ver{display:inline-block;margin-top:7px;font-family:'Heebo';font-weight:600;font-size:11.5px;letter-spacing:.04em;color:#7FB3AE;background:rgba(255,255,255,.07);padding:3px 11px;border-radius:11px}
+
+  @media(max-width:680px){
+    .bgrid,.grid2{grid-template-columns:1fr}
+    .dtag{display:none}
+    .daytop{padding:13px 15px;gap:10px}
+    .dbody{padding:4px 15px 15px}
+    .tm{min-width:46px;font-size:11.5px}
+    .srch{width:104px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+  @media print{
+    .navbar,.filterbar,.prbtn,.btn{display:none}
+    body{background:#fff;font-size:12px}
+    .hero{background:var(--sea)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .day,.bcard,.eat,.plain{break-inside:avoid}
+    .day.shut .dbody{display:block!important}
+    section{padding:16px 0}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">מסלול טיול · 6 נוסעים</div>
+    <h1>קוסטה בראווה<br>& ברצלונה</h1>
+    <p class="sub">שבעה ימים בין הים לעיר — משחק בקמפ נואו, סה טונה, פארק מים, זריחה על הסאפ, שווקים וקניות.</p>
+    <div class="facts">
+      <div class="fact"><b>26.8 – 2.9.2026</b><span>7 לילות</span></div>
+      <div class="fact"><b>13 · 21 · 24 · 25 · 50 · 50</b><span>טווח גילאים רחב</span></div>
+      <div class="fact"><b>ואן 7 מקומות</b><span>6 נוסעים + מזוודות</span></div>
+      <div class="fact"><b>דגים כן · פירות ים לא</b><span>כל ההמלצות מותאמות</span></div>
+    </div>
+    <div class="flights">
+      <div><b>הלוך</b> · LY393 · ד׳ 26.8 · 05:45 נתב״ג ← 09:25 ברצלונה T1</div>
+      <div><b>חזור</b> · LY394 · ד׳ 2.9 · 10:45 ברצלונה ← 15:50 נתב״ג</div>
+    </div>
+  </div>
+  <svg class="wv" viewBox="0 0 1440 36" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,20 C240,38 480,2 720,18 C960,34 1200,6 1440,20 L1440,36 L0,36 Z" fill="#F4EDDF"/></svg>
+</header>
+
+<nav class="navbar">
+  <div class="navrow" id="navrow">
+    <button class="pill on" data-go="all">כל הימים</button>
+    <button class="pill" data-go="d1">1 · נחיתה</button>
+    <button class="pill" data-go="d2">2 · המשחק</button>
+    <button class="pill" data-go="d3">3 · יורט</button>
+    <button class="pill" data-go="d4">4 · פארק מים</button>
+    <button class="pill" data-go="d5">5 · קיאקים</button>
+    <button class="pill" data-go="d6">6 · סה טונה</button>
+    <button class="pill" data-go="d7">7 · אאוטלט</button>
+    <button class="pill" data-go="booking">הזמנות</button>
+    <button class="pill" data-go="eats">מסעדות</button>
+    <button class="pill" data-go="backup">גיבוי</button>
+    <button class="pill" data-go="money">תקציב</button>
+    <button class="pill" data-go="info">מידע שימושי</button>
+  </div>
+</nav>
+
+<div class="filterbar">
+  <div class="filterrow" id="filterrow">
+    <input class="srch" id="srch" type="search" placeholder="🔍 חיפוש…" aria-label="חיפוש במסלול">
+    <span class="sep"></span>
+    <button class="chip on" data-k="all">הכל</button>
+    <button class="chip" data-k="sea">🌊 מים</button>
+    <button class="chip" data-k="food">🍽 אוכל</button>
+    <button class="chip" data-k="shop">🛍 קניות</button>
+    <button class="chip" data-k="see">🏛 סיורים</button>
+    <button class="chip" data-k="go">🚗 נסיעה</button>
+    <span class="sep"></span>
+    <button class="chip anchor" data-k="anchor">⚓ רק עוגנים</button>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <div class="sechead"><h2>המסלול</h2><div class="rule"></div><span class="count" id="cnt"></span></div>
+
+    <div class="plain" style="border-inline-start:3px solid var(--plum)">
+      <h4 style="color:var(--plum)">איך לקרוא את זה</h4>
+      <p>מתחת לכל שם מופיע <b>בסגול</b> משפט אחד שמסביר מה זה המקום בכלל — ואז ההסבר המלא. <b>עוגן</b> = הליבה של היום. <b>בונוס</b> = אם יש כוח. יש למעלה חיפוש חופשי, סינון לפי קטגוריה, וכפתור ⚓ שמציג רק את העוגנים.</p>
+    </div>
+
+    <!-- D1 -->
+    <article class="day" id="d1" style="--tag:var(--sea);--tagsoft:rgba(14,77,92,.1)">
+      <div class="daytop" tabindex="0"><div class="dnum">1</div>
+        <div class="dmeta"><h3>נחיתה — יום מכוון בכוונה נמוך</h3><div class="dt">רביעי · 26 באוגוסט</div><div class="stats">5 עוגנים · 2 בונוס · הכל בהליכה</div></div>
+        <div class="dtag">ברצלונה</div><span class="caret">▾</span></div>
+      <div class="dbody">
+        <div class="note hot"><b>לילה לבן:</b> טיסה ב-05:45 אומרת יציאה מהבית ב-02:30. אף אחד לא ישן. בניתי את היום עם <b>עוגן תוכן אחד בלבד</b> וחלון מנוחה של שעתיים.</div>
+
+        <div class="item anchor" data-k="go"><div class="tm">09:25</div><div class="wt"><b>נחיתה · טרמינל 1<span class="tags"><span class="kind">נסיעה</span></span></b>
+          <div class="what">שדה התעופה של ברצלונה, אל פראט — 18 ק״מ דרומית לעיר.</div>
+          <p>אל תתכננו לצאת מהשדה לפני 11:00. ישראל היא מחוץ לאיחוד האירופי, ומאז אוקטובר 2025 פועל בגבולות אירופה מנגנון בשם <b>EES</b> — רישום ביומטרי של טביעות אצבע ותמונה בכניסה הראשונה. באוגוסט זה מוסיף 45–75 דקות לביקורת הדרכונים. ואז מזוודות ואיסוף ואן.</p></div></div>
+
+        <div class="item anchor" data-k="go"><div class="tm">11:30</div><div class="wt"><b>למלון, זורקים מזוודות<span class="tags"><span class="drive">🚗 25 דק׳</span></span></b>
+          <div class="what">אייסמפלה — הרובע המרכזי של ברצלונה, בנוי בשתי־וערב עם פינות קטומות.</div>
+          <p>הצ׳ק-אין הרשמי הוא 15:00, אבל כל מלון יאחסן לכם מזוודות בקבלה. אל תשבו בלובי לחכות.</p></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">12:30</div><div class="wt"><b>צהריים קלים ליד המלון<span class="tags"><span class="kind">אוכל</span></span></b>
+          <div class="what">ארוחה פונקציונלית, לא חוויה.</div>
+          <p>לא לצאת למסע קולינרי עכשיו — הארוחה הטובה מחכה ב-21:00. משהו קרוב, מוצל וזמין.</p></div></div>
+
+        <div class="item anchor star" data-k="see"><div class="tm">14:00</div><div class="wt"><b>הרובע הגותי + קתדרלת ברצלונה<span class="tags"><span class="cost">💶 11€</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">גרעין העיר מימי הביניים, ובמרכזו הקתדרלה הראשית של ברצלונה.</div>
+          <p><b>הרובע הגותי</b> הוא מבוך סמטאות אבן שנבנה על גבי העיר הרומית — צר, מוצל, ושטוח להליכה, ולכן מושלם ליום כזה. <b>הקתדרלה</b> (רשמית: קתדרלת הצלב הקדוש וסנטה אאולליה, מכונה "לה סאו") נבנתה בין 1298 ל-1448 בסגנון גותי קטלוני, והיא <b>לא</b> הסגרדה פמיליה — זו הכנסייה העתיקה והרשמית של העיר, מושב הארכיבישוף.</p>
+          <p>מה רואים בפועל: ספינה מרכזית עם עמודים גותיים גבוהים, מקהלה מגולפת, ו<b>מנזר פנימי שבו חיים 13 אווזים לבנים</b> — אחד לכל שנה בחייה של אאולליה, נערה בת 13 שהוצאה להורג בידי הרומאים בשנת 303. יש גם <b>גג/טרסה</b> עם נוף על הרובע — תוספת של 3€ שכדאי לקנות בקופה ולא באינטרנט, שם זה יקר יותר.</p>
+          <div class="note"><b>שעות ומחיר:</b> ביקור תיירים א׳–ו׳ 09:30–18:30 (כניסה אחרונה 17:45). כרטיס בוגר ~11€, ילדים 7–17 כ-7€. <b>בימי ראשון פתוח לתיירים רק 14:00–17:00.</b> אתם שם ברביעי, אז אין בעיה. אם עייפים מדי — אפשר רק להסתובב בסמטאות בחוץ, גם זה שווה.</div>
+          <div class="acts"><a class="btn" href="https://tickets.catedralbcn.org/en" target="_blank">כרטיסים רשמי ↗</a></div></div></div>
+
+        <div class="item bonus" data-k="food"><div class="tm">15:45</div><div class="wt"><b>שוק לה בוקריה<span class="tags"><span class="kind">קולינריה</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">שוק המזון המרכזי והמפורסם של ברצלונה, על שדרת הראמבלה.</div>
+          <p>שוק מקורה מ-1840 עם כניסת ברזל וויטראז׳ צבעוני. בפנים: דוכני פירות חתוכים, מיצים טריים, נקניקי חמון תלויים, גבינות, ממתקים, וכמה דוכני אוכל שאפשר לשבת בהם. הוא <b>מאוד תיירותי</b> וצפוף — אבל המראה עצמו שווה את המעבר. 10 דקות הליכה מהקתדרלה, פתוח עד 20:30, <b>סגור בימי ראשון</b>.</p></div></div>
+
+        <div class="item anchor" data-k="see"><div class="tm">17:00</div><div class="wt"><b>צ׳ק-אין ומנוחה<span class="tags"><span class="kind">חובה</span></span></b>
+          <div class="what">שעתיים במיטה, לא פחות.</div>
+          <p>זה לא בזבוז זמן — זה מה שיציל את יום 2, שנגמר במשחק ב-23:00.</p></div></div>
+
+        <div class="item bonus" data-k="sea"><div class="tm">19:30</div><div class="wt"><b>חוף ברסלונטה<span class="tags"><span class="kind">ים</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">חוף העיר של ברצלונה, ברובע דייגים לשעבר.</div>
+          <p>רצועת חול עירונית באורך קילומטר עם טיילת, בתי קפה על החול (נקראים <b>צ׳ירינגיטו</b>) ואנשים מכל העולם. לא החוף הכי יפה של הטיול — אבל הוא הים הראשון, והוא במרחק הליכה. השקיעה בסוף אוגוסט ~20:25.</p></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">21:00</div><div class="wt"><b>Robata · הסושי שאתם חייבים<span class="tags"><span class="who">⭐ הבחירה שלכם</span></span></b>
+          <div class="what">מסעדה יפנית באייסמפלה עם סושי וגריל פחמים.</div>
+          <p><b>רובטה</b> היא שיטת בישול יפנית של צלייה איטית על גחלים, ומכאן השם. שמתי אותה כאן ולא ביום 2, כי יום 2 נגמר במשחק ואין בו ערב פנוי. פתוחה עד חצות, קרובה למלון, ואחרי לילה לבן זו בדיוק הארוחה שרוצים — מנות קטנות לשיתוף. <b>הם מלאים תמיד, תזמינו.</b></p>
+          <div class="acts"><a class="btn" href="tel:+34937826000">📞 937 82 60 00</a><a class="btn t" href="#eats">כל המסעדות ↓</a></div></div></div>
+      </div>
+    </article>
+
+    <!-- D2 -->
+    <article class="day match" id="d2">
+      <div class="daytop" tabindex="0"><div class="dnum">2</div>
+        <div class="dmeta"><h3>גאודי, קניות והמשחק</h3><div class="dt">חמישי · 27 באוגוסט</div><div class="stats">5 עוגנים · 1 בונוס · מטרו בלבד</div></div>
+        <div class="dtag">ברצלונה 🔵🔴</div><span class="caret">▾</span></div>
+      <div class="dbody">
+        <div class="item anchor star" data-k="see"><div class="tm">09:00</div><div class="wt"><b>סגרדה פמיליה<span class="tags"><span class="cost">💶 26–40€</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">בזיליקה ענקית של אנטוני גאודי שנבנית מאז 1882 — ועדיין לא הושלמה.</div>
+          <p>זה המבנה המזוהה ביותר עם ברצלונה. גאודי לקח את הפרויקט ב-1883 והקדיש לו 43 שנה עד מותו ב-1926, כשהוא בנוי בערך ברבע. הבנייה נמשכת עד היום במימון כרטיסי הכניסה.</p>
+          <p>מה שהופך אותו לחריג הוא הפנים: גאודי עיצב את העמודים כ<b>יער</b> — הם מסתעפים כלפי מעלה כמו גזעי עצים, והתקרה נראית כמו חופת נוף. הקירות עשויים ויטראז׳ים בגוונים מדורגים, וכשהשמש נכנסת האור נצבע. <b>לכן תזמנו לשעה מוקדמת</b>: בבוקר האור עובר דרך הוויטראז׳ים המזרחיים וצובע את הפנים בכתום ואדום. בערב זה כחול-ירוק מהצד המערבי.</p>
+          <div class="note hot"><b>הכרטיסים אוזלים שבועות מראש</b> ונמכרים בחלונות זמן. בסוף אוגוסט זו העונה הכי עמוסה. זו ההזמנה שהייתי עושה ראשונה אחרי המשחק. הביקור ~1:15.</div>
+          <div class="acts"><a class="btn" href="https://sagradafamilia.org/en/tickets" target="_blank">כרטיסים רשמי ↗</a></div></div></div>
+
+        <div class="item anchor star" data-k="shop"><div class="tm">11:00</div><div class="wt"><b>פאסאיג׳ דה גראסיה · קניות<span class="tags"><span class="drive">🚇 15 דק׳</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">שדרת הקניות הראשית של ברצלונה, ובמקביל רחוב הארכיטקטורה החשוב בעיר.</div>
+          <p>קילומטר אחד שמחבר בין כיכר קטלוניה לרובע גראסיה. משני הצדדים: <b>זארה, מנגו, מאסימו דוטי, ברשקה, סטרדיווריוס</b> ולצידם שאנל, גוצ׳י ולואי ויטון — כלומר יש כאן טווח מחירים אמיתי ולא רק יוקרה.</p>
+          <p>במקביל, השדרה בנויה כולה מבתי אצולה מתחילת המאה ה-20, כולל שני מבנים של גאודי. אפילו <b>ספסלי הרחוב ופנסי התאורה</b> הם יצירות מעוצבות. זה החלק של היום שהכי מתאים לכולם בו-זמנית: הצעירים לחנויות, ההורים לקפה על השדרה.</p></div></div>
+
+        <div class="item bonus" data-k="see"><div class="tm">13:00</div><div class="wt"><b>קסה בטליו<span class="tags"><span class="cost">💶 ~35€</span></span></b>
+          <div class="what">בית מגורים שגאודי עיצב מחדש ב-1904, על שדרת הקניות עצמה.</div>
+          <p>מכונה "בית העצמות" בגלל המרפסות שנראות כמו גולגולות והעמודים כמו עצמות. הגג מכוסה קשקשים ורכס מפותל שאמור לרמוז על הדרקון של סנט ג׳ורדי, קדוש המגן של קטלוניה. בפנים אין כמעט קו ישר אחד — הכל גלי.</p>
+          <div class="note"><b>החלטה לגיטימית לדלג:</b> הכניסה יקרה ותובענית מבחינת זמן, והחזית מבחוץ היא ממילא החלק המפורסם. אם בא לכם רק לצלם — זה בסדר גמור.</div>
+          <div class="acts"><a class="btn" href="https://www.casabatllo.es/en/" target="_blank">כרטיסים רשמי ↗</a></div></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">14:30</div><div class="wt"><b>Harry's או Tragaluz<span class="tags"><span class="who">⭐ הבחירה שלכם</span></span></b>
+          <div class="what">שתי מסעדות איטלקיות־ים-תיכוניות על סמטה קטנה ליד שדרת הקניות.</div>
+          <p>גילוי נחמד: שתיהן יושבות על <b>אותה סמטה</b> — Passatge de la Concepció, מספרים 2 ו-5, שנפתחת ישירות מפאסאיג׳ דה גראסיה. מסיימים קניות ונכנסים ישר לצהריים בלי לזוז.</p>
+          <div class="note hot"><b>אבל לא כבד.</b> יש משחק ב-21:00, ופסטה כבדה ב-14:30 היא טעות. פסטה אחת לשניים וסלט.</div>
+          <div class="acts"><a class="btn" href="tel:+34934599318">📞 Harry's</a><a class="btn" href="tel:+34934870621">📞 Tragaluz</a></div></div></div>
+
+        <div class="item anchor" data-k="see"><div class="tm">16:00</div><div class="wt"><b>מנוחה במלון<span class="tags"><span class="kind">חובה</span></span></b>
+          <div class="what">שעתיים לפני ערב ארוך.</div>
+          <p>המשחק נגמר ב-23:00 והחזרה למלון סביב חצות. בלי המנוחה הזו, בני ה-50 והבן 13 ייגמרו בהפסקה.</p></div></div>
+
+        <div class="item anchor star" data-k="see"><div class="tm">19:00</div><div class="wt"><b>ספוטיפיי קמפ נואו · ברצלונה–אתלטיק בילבאו<span class="tags"><span class="drive">🚇 20 דק׳</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">האצטדיון הביתי של ברצלונה מאז 1957, כרגע באמצע שיפוץ ענק.</div>
+          <p>הקבוצה שיחקה שנתיים וחצי במונז׳ואיק בזמן שהאצטדיון נבנה מחדש בפרויקט בשם <b>Espai Barça</b>, וחזרה הביתה ב-22 בנובמבר 2025 — <b>במשחק נגד אתלטיק בילבאו, אותה יריבה בדיוק כמו שלכם</b> (ניצחון 4:0). הבנייה עדיין נמשכת סביב הצופים. היעד הסופי הוא 105,000 מקומות, מה שיהפוך אותו לאצטדיון הגדול באירופה.</p>
+          <div class="note hot"><b>זה משנה את סיפור הכרטיסים, ושווה לדעת:</b> הקיבולת כרגע היא כ-<b>62,650 מקומות</b> ולא 99,000 כמו פעם — כלומר כ-37,000 מקומות פחות. מנויים וחברי מועדון מקבלים עדיפות, והכרטיסים לקהל הרחב מוגבלים ויקרים מבעבר. <b>שישה מקומות צמודים זה לא מובן מאליו.</b> קנו רק דרך האתר הרשמי, מוקדם ככל האפשר, ואם לא מסתדר — בדקו מכירה חוזרת רשמית ולא מתווכים.</div>
+          <div class="note"><b>הגעה:</b> שריקה 21:00, יוצאים 19:00 ומגיעים 19:30 — מספיק לאווירה, לחנות הרשמית ולאוכל. <b>מטרו קו L3</b> הלוך וחזור. אחרי משחק, מונית לשישה היא בין בלתי אפשרית למאה יורו. הרכב נשאר בחניון.</div>
+          <div class="acts"><a class="btn" href="https://www.fcbarcelona.com/en/tickets" target="_blank">כרטיסים רשמי ↗</a></div></div></div>
+      </div>
+    </article>
+
+    <!-- D3 -->
+    <article class="day" id="d3" style="--tag:var(--water);--tagsoft:rgba(47,166,160,.15)">
+      <div class="daytop" tabindex="0"><div class="dnum">3</div>
+        <div class="dmeta"><h3>צפונה, דרך טוסה</h3><div class="dt">שישי · 28 באוגוסט</div><div class="stats">4 עוגנים · 2 בונוס · 1:40 נסיעה</div></div>
+        <div class="dtag">→ יורט</div><span class="caret">▾</span></div>
+      <div class="dbody">
+        <div class="note"><b>בוקר איטי מותר.</b> חזרתם מהמשחק בחצות. אין סיבה לצאת ב-8, וטוסה נעימה יותר בצהריים ממילא.</div>
+
+        <div class="item anchor" data-k="food"><div class="tm">09:15</div><div class="wt"><b>בראנץ׳ פרידה · Trópico או Bloome<span class="tags"><span class="who">⭐ הבחירה שלכם</span></span></b>
+          <div class="what">שתי מסעדות בראנץ׳ שפתוחות רק עד הצהריים.</div>
+          <p>הבוקר האיטי הזה הוא בדיוק המקום לשתי ההמלצות שלכם — לשתיהן אין שום חלון אחר בטיול. <b>Trópico</b> (בלמס 24) לטינו-אמריקאי, 4.9 עם 9,000 ביקורות. <b>Bloome by Sasha</b> — סניף הגותיק פתוח מ-8:30.</p>
+          <div class="acts"><a class="btn" href="tel:+34938348624">📞 Trópico</a><a class="btn" href="tel:+34602500335">📞 Bloome</a></div></div></div>
+
+        <div class="item anchor" data-k="go"><div class="tm">11:00</div><div class="wt"><b>צ׳ק-אאוט, AP-7 צפונה<span class="tags"><span class="drive">🚗 1:20</span></span></b>
+          <div class="what">75 ק״מ מברצלונה לטוסה, כביש מהיר ואז כביש חופי.</div>
+          <p>הקטע האחרון מבלאנס לטוסה הוא כביש מפותל שנצמד לצוקים מעל הים — יפה מאוד, אבל לא ממהרים בו.</p></div></div>
+
+        <div class="item anchor star" data-k="see"><div class="tm">12:30</div><div class="wt"><b>טוסה דה מאר · הווילה וייה<span class="tags"><span class="cost">💶 חינם</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">עיירת חוף עם עיר עתיקה מוקפת חומה מהמאה ה-12, בנויה על צוק מעל החוף.</div>
+          <p><b>וילה וייה</b> פירושו "העיר הישנה" בקטלאנית, וזו <b>העיירה המבוצרת היחידה ששרדה בכל החוף הקטלוני</b> — כל השאר נהרסו. החומות נבנו כהגנה מפני פיראטים ברברים, ונותרו מהן שלושה מגדלים גליליים ומעגל חומה כמעט שלם.</p>
+          <p>מה עושים: עולים בשביל מרוצף בין הבתים הישנים עד המגדלור בפסגה, נוף על המפרץ ועל הים הפתוח, ואז <b>יורדים ישר לחוף העירוני שנמצא מתחת לטירה</b> וטובלים. השילוב הזה של היסטוריה וים באותו מקום הוא בדיוק מה שעובד לקבוצה בטווח גילאים רחב — אף אחד לא משועמם יותר מדי זמן.</p></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">14:00</div><div class="wt"><b>צהריים בטוסה<span class="tags"><span class="kind">אוכל</span></span></b>
+          <div class="what">שתי אפשרויות טובות, שתיהן בעיירה עצמה.</div>
+          <p>La Placeta בכיכר האבן העתיקה עם תפריט יומי, או Popa עם טרסה שמסתכלת על הטירה.</p>
+          <div class="acts"><a class="btn t" href="#eats">המסעדות ↓</a></div></div></div>
+
+        <div class="item anchor" data-k="go"><div class="tm">15:45</div><div class="wt"><b>צ׳ק-אין ביורט<span class="tags"><span class="drive">🚗 20 דק׳</span></span></b>
+          <div class="what">יורט דה מאר — עיירת הנופש הגדולה של החוף.</div>
+          <p>רק 11 ק״מ מטוסה, אבל כביש חופי מפותל. יורט היא הגדולה והסואנת מבין ערי החוף כאן, עם טיילת ארוכה, בארים וחיי לילה — וגם, מחוץ למרכז, מפרצונים שקטים.</p></div></div>
+
+        <div class="item bonus" data-k="sea"><div class="tm">17:00</div><div class="wt"><b>חוף סנטה כריסטינה<span class="tags"><span class="kind">ים</span></span></b>
+          <div class="what">מפרץ קטן ומוקף אורנים כ-3 ק״מ מדרום למרכז יורט.</div>
+          <p>שקט ויפה בהרבה מהחוף המרכזי, עם מים רדודים ורגועים. אם רוצים משהו קרוב יותר למרכז — קאלה סה בואדֶלה.</p></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">20:30</div><div class="wt"><b>Tribus by Casa Coco<span class="tags"><span class="who">⭐ הבחירה שלכם</span></span></b>
+          <div class="what">מסעדה ים-תיכונית בתוך מלון בוטיק, מחוץ למרכז יורט.</div>
+          <p>בחירה מצוינת — 4.7, עם טרסה מוקפת עצי אורן. ביקורת אחת שם אומרת בדיוק את זה: <b>״דלגו על המסעדות של הטיילת ובואו לכאן במקום״</b>. מקבלים קבוצות גדולות בנעימות. 1.5 ק״מ צפונית למרכז, כלומר לוקחים רכב.</p>
+          <div class="note hot"><b>שעות צרות:</b> ראשון–חמישי רק 20:00–22:00. שישי–שבת 19:30–23:00. אתם שם בשישי, אבל זה עדיין חלון קצר — חובה להזמין.</div>
+          <div class="acts"><a class="btn" href="tel:+34972980283">📞 972 98 02 83</a></div></div></div>
+
+        <div class="item bonus" data-k="food"><div class="tm">22:30</div><div class="wt"><b>הטיילת של יורט<span class="tags"><span class="who">🎢 צעירים</span></span></b>
+          <div class="what">רצועת בארים ומועדונים לאורך החוף.</div>
+          <p>יורט היא בירת חיי הלילה של החוף הקטלוני. אחרי הארוחה — הצעירים נשארים וההורים חוזרים. זה בדיוק סוג הערב להתפצל בו.</p></div></div>
+      </div>
+    </article>
+
+    <!-- D4 -->
+    <article class="day" id="d4" style="--tag:var(--water);--tagsoft:rgba(47,166,160,.15)">
+      <div class="daytop" tabindex="0"><div class="dnum">4</div>
+        <div class="dmeta"><h3>יום המים הגדול</h3><div class="dt">שבת · 29 באוגוסט</div><div class="stats">2 עוגנים · 1 בונוס · 7 דק׳ נסיעה</div></div>
+        <div class="dtag">יורט 💦</div><span class="caret">▾</span></div>
+      <div class="dbody">
+        <div class="item anchor star" data-k="sea"><div class="tm">09:30</div><div class="wt"><b>Water World<span class="tags"><span class="drive">🚗 7 דק׳</span><span class="cost">💶 ~40€</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">פארק מים גדול, 3.5 ק״מ מערבית ממרכז יורט (לא על החוף — בכביש לוידְרֶרֶס).</div>
+          <p>אחד מפארקי המים הגדולים באירופה, פרוס על גבעה ביער אורנים. יש בו מגלשות אדרנלין גבוהות, מגלשות משפחתיות, <b>בריכת גלים</b> מרכזית, נהר עצל, ואזורי צל עם סולריום ומסעדות. <b>חניה חינם</b> בשטח.</p>
+          <div class="note hot"><b>הטיפ שחוסך שעה:</b> הפארק פותח ב-10:00 אבל <b>המגלשות הגדולות נפתחות רק ב-11:00</b>. מי שמגיע ב-9:30 גומר את כולן לפני שנוצרים תורים. מותר להביא צידנית — האוכל בפנים יקר ובינוני.</div>
+          <div class="note"><b>למה זה עובד לקבוצה הזו:</b> זה כנראה היום היחיד שבו בן 13 ובני 50 נהנים באותה מידה מדברים שונים לגמרי — מגלשות מצד אחד, סולריום מוצל מהצד השני, ובריכת הגלים באמצע לכולם יחד.</div>
+          <div class="acts"><a class="btn" href="https://www.getyourguide.com/he-il/lloret-de-mar-l2322/lloret-de-mar-entry-ticket-to-waterworld-water-park-t1353378/" target="_blank">כרטיסים ↗</a></div></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">19:30</div><div class="wt"><b>LA BRAVA Street Food<span class="tags"><span class="cost">💶 זול</span><span class="who">⭐ הבחירה שלכם</span></span></b>
+          <div class="what">מקום המבורגרים קליל במרכז יורט.</div>
+          <p>ההתאמה כמעט מושלמת: אחרי תשע שעות בפארק מים אף אחד לא רוצה ארוחה רצינית — רוצים המבורגר. פתוח עד 01:00, הכי זול ברשימה, והביקורות מדברות על Truffle Master ו-Cheese Bomb. יש גם לזניה וגלידה. בלי הזמנה, פשוט מגיעים.</p></div></div>
+
+        <div class="item bonus" data-k="food"><div class="tm">21:00</div><div class="wt"><b>או משהו יושב יותר<span class="tags"><span class="kind">חלופה</span></span></b>
+          <div class="what">אם בכל זאת יש כוח לשבת.</div>
+          <p>La Plaça לסטייק, או KAI לסושי (סגור בימי שני, אבל שבת פתוח).</p>
+          <div class="acts"><a class="btn t" href="#eats">המסעדות ↓</a></div></div></div>
+      </div>
+    </article>
+
+    <!-- D5 -->
+    <article class="day" id="d5" style="--tag:var(--olive);--tagsoft:rgba(126,113,54,.15)">
+      <div class="daytop" tabindex="0"><div class="dnum">5</div>
+        <div class="dmeta"><h3>קיאקים בדרך לבגור</h3><div class="dt">ראשון · 30 באוגוסט</div><div class="stats">5 עוגנים · 2 בונוס · 1:30 נסיעה</div></div>
+        <div class="dtag">→ בגור 🤿</div><span class="caret">▾</span></div>
+      <div class="dbody">
+        <div class="item anchor" data-k="go"><div class="tm">08:45</div><div class="wt"><b>צ׳ק-אאוט מיורט<span class="tags"><span class="drive">🚗 40 דק׳</span></span></b>
+          <div class="what">25 ק״מ צפונה בכביש החופי GI-682.</div>
+          <p>מפותל, יפה, ואיטי יותר משנדמה על המפה. יוצאים ב-8:45 כדי להגיע ב-9:35 למפגש של 9:40.</p></div></div>
+
+        <div class="item anchor star" data-k="sea"><div class="tm">10:00</div><div class="wt"><b>קיאק + שנרקול · סנט פליו דה גיקסולס<span class="tags"><span class="cost">💶 ~35€</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">סיור מודרך של שעתיים בקיאקים לאורך מצוקי החוף, עם עצירה לשנרקול.</div>
+          <p><b>סנט פליו דה גיקסולס</b> היא עיירת נמל עם מנזר מהמאה ה-10, בערך באמצע הדרך בין יורט לבגור. הקיאקים הם מסוג <b>sit-on-top</b> דו-מושביים — יושבים עליהם ולא בתוכם, הם יציבים וכמעט בלתי אפשרי להתהפך, ולכן זה עובד גם לבן 13 וגם למי שלא חתר מימיו.</p>
+          <p>מה קורה בפועל: חותרים לאורך קו הצוקים ונכנסים למפרצונים שאין אליהם גישה מהיבשה, ובאמצע עוצרים, קושרים את הקיאקים וקופצים למים עם מסכה וסנפיר. רואים להקות דגים, קיפודי ים, ולפעמים תמנון. כל הציוד והתמונות כלולים.</p>
+          <div class="note"><b>מפגש 09:40</b> — בפינה השמאלית של המפרץ (Passeig Fortim), בית עץ עם קיאקים על מדפים. הגיעו עם בגד ים לבוש מראש ומגבת ברכב.</div>
+          <div class="acts"><a class="btn" href="https://www.getyourguide.com/he-il/sant-feliu-de-guixols-l98145/sant-feliu-de-guixols-costa-brava-kayak-snorkeling-tour-t424313/" target="_blank">להזמין ↗</a></div></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">12:45</div><div class="wt"><b>צהריים בסנט פליו<span class="tags"><span class="kind">אוכל</span></span></b>
+          <div class="what">העיירה עצמה, על המפרץ.</div>
+          <p>אחרי שעתיים בים תהיו רעבים. יש טיילת נעימה עם מסעדות.</p></div></div>
+
+        <div class="item bonus" data-k="sea"><div class="tm">14:30</div><div class="wt"><b>קאלה סלגֶר<span class="tags"><span class="drive">🚗 25 דק׳</span><span class="who">🎢 צעירים</span></span></b>
+          <div class="what">מפרצון זעיר ליד פלמוס עם בקתות דייגים צבעוניות בנויות על הסלע.</div>
+          <p>אחת התמונות המזוהות של הקוסטה בראווה — שורת בקתות אבן צבועות בלבן, כחול ואדום, ישר על המים. <b>אבל:</b> אין חניה בחוף עצמו. חונים בחוף La Fosca והולכים 20 דקות לכל כיוון ב<b>קאמי דה רונדה</b> (שביל חוף היסטורי שנחצב במקור לשומרי חופים), בחום של אוגוסט. אחרי בוקר של חתירה זה לא לכולם — <b>שקלו לדלג ולהגיע לבגור מוקדם.</b></p></div></div>
+
+        <div class="item anchor" data-k="go"><div class="tm">16:30</div><div class="wt"><b>צ׳ק-אין בבגור<span class="tags"><span class="drive">🚗 25 דק׳</span></span></b>
+          <div class="what">בגור — עיירה על גבעה, כ-2 ק״מ מהים, שסביבה מפוזרים המפרצונים היפים באזור.</div>
+          <p>שלא כמו יורט, בגור היא עיירה קטנה ושקטה עם כיכר מרכזית אחת. הייחוד שלה הוא שהיא מתפקדת כבסיס: בטווח 10 דקות נסיעה יש חמישה־שישה מפרצונים שונים לגמרי זה מזה.</p></div></div>
+
+        <div class="item bonus" data-k="see"><div class="tm">18:30</div><div class="wt"><b>טירת בגור<span class="tags"><span class="cost">💶 חינם</span></span></b>
+          <div class="what">חורבות מצודה מהמאה ה-11 על ראש הגבעה שמעל העיירה.</div>
+          <p>מהמצודה עצמה נשארו בעיקר חומות, אבל <b>הנוף הוא הסיבה</b>: 360 מעלות על כל קו החוף, על העיירה ועל הפירנאים ברקע. 20 דקות הליכה תלולה מהכיכר, חינם, ופתוח תמיד. עולים אחרי 18:00 כשהחום יורד. מי שלא בקטע יכול להישאר בכיכר עם קפה.</p></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">20:30</div><div class="wt"><b>ערב בבגור העתיקה<span class="tags"><span class="kind">אוכל</span></span></b>
+          <div class="what">הכיכר המרכזית של העיירה, מלאה מסעדות.</div>
+          <p><b>שימו לב:</b> Begurio סגור בימי ראשון. Humo (על האש) ו-Son Molas פתוחים, וגם Can Kai לסושי.</p>
+          <div class="acts"><a class="btn t" href="#eats">המסעדות ↓</a></div></div></div>
+      </div>
+    </article>
+
+    <!-- D6 -->
+    <article class="day" id="d6" style="--tag:var(--olive);--tagsoft:rgba(126,113,54,.15)">
+      <div class="daytop" tabindex="0"><div class="dnum">6</div>
+        <div class="dmeta"><h3>זריחה על הסאפ וסה טונה</h3><div class="dt">שני · 31 באוגוסט</div><div class="stats">3 עוגנים · 2 בונוס · הכל קרוב</div></div>
+        <div class="dtag">בגור 🌅</div><span class="caret">▾</span></div>
+      <div class="dbody">
+        <div class="item bonus" data-k="sea"><div class="tm">06:45</div><div class="wt"><b>SUP בזריחה<span class="tags"><span class="cost">💶 ~40€</span><span class="who">🎢 צעירים</span></span></b>
+          <div class="what">סיור סטנד-אפ פאדל — עומדים על קרש רחב וחותרים במשוט אחד.</div>
+          <p>יוצאים לים לפני שהרוח מתעוררת, כשהמים שטוחים כמו זכוכית, ורואים את השמש עולה מהאופק מעל הים. שעה וחצי, קבוצה קטנה, כל הציוד כלול. הזריחה בסוף אוגוסט ~7:15.</p>
+          <div class="note"><b>ההצעה שלי:</b> אל תכריחו את כל השישה. זו פעילות שדורשת קימה ב-6:00 אחרי חמישה ימי טיול. הזמינו <b>2–4 מקומות</b> למי שבאמת רוצה, ותנו לשאר לישון — כולם נפגשים בארוחת בוקר. גם חוסך כסף.</div>
+          <div class="acts"><a class="btn" href="https://www.getyourguide.com/he-il/begur-l96718/costa-brava-stand-up-paddleboarding-at-sunrise-in-begur-t1031404/" target="_blank">להזמין ↗</a></div></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">09:30</div><div class="wt"><b>בוקר מאוחר יחד<span class="tags"><span class="kind">אוכל</span></span></b>
+          <div class="what">נקודת המפגש של הקבוצה אחרי הבוקר המפוצל.</div>
+          <p>מי שקם ב-6 ומי שישן עד 9 — כולם באותו שולחן.</p></div></div>
+
+        <div class="item bonus" data-k="see"><div class="tm">11:00</div><div class="wt"><b>בוקר חופשי בבגור<span class="tags"><span class="kind">מנוחה</span></span></b>
+          <div class="what">כלום מתוכנן, בכוונה.</div>
+          <p>בריכה במלון, סיבוב בעיירה, או שינה. היום השישי הוא היום שבו הקבוצה צריכה אוויר.</p></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">13:00</div><div class="wt"><b>Cap Sa Sal · צהריים עם נוף<span class="tags"><span class="drive">🚗 12 דק׳</span><span class="who">⭐ הבחירה שלכם</span></span></b>
+          <div class="what">מסעדה בתוך מתחם מלון היסטורי על צוק מעל הים, צפונית לבגור.</div>
+          <p>Cap Sa Sal נבנה בשנות ה-60 כאחד המלונות המפוארים הראשונים בחוף, והוא בנוי ישירות במדרון הסלע מעל המפרץ. מצאתי משהו שמסדר את כל היום: <b>הוא יושב 600 מטר מסה טונה.</b> כלומר אוכלים צהריים עם הנוף שרציתם, ואז יורדים לחוף — בלי לנסוע פעמיים. שירות צהריים 13:00–16:00.</p>
+          <div class="note hot"><b>שלושה דברים לדעת מראש</b> (חוזרים בביקורות, וכולם פתירים אם יודעים): ① יש <b>הגבלת שולחן של 90 דקות</b> שלא תמיד מציינים בהזמנה — שאלו בטלפון. ② הפאייה מתומחרת <b>לפי מנה ולא לפי זוג</b>, ואנשים הופתעו בחשבון כפול. ③ לא אוהבים שולחנות שמזמינים רק מנות ראשונות. הנוף מקבל שבחים פה אחד; השאר דורש ציפיות מכוילות.</div>
+          <div class="acts"><a class="btn" href="tel:+34972624375">📞 972 62 43 75</a></div></div></div>
+
+        <div class="item anchor star" data-k="sea"><div class="tm">16:00</div><div class="wt"><b>Platja de Sa Tuna<span class="tags"><span class="drive">🚶 600 מ׳</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">מפרץ דייגים זעיר עם כפר לבן קטן, החוף שביקשתם.</div>
+          <p>סה טונה היא <b>הכפר הכי מצולם בקוסטה בראווה</b>, ובצדק: קומץ בתים לבנים יורדים אל המים, סירות דיג שלופות על החלוקים, ומים בגוון טורקיז כהה. בצד המפרץ יש את <b>מערת סנט פאו</b> שנותנת צל אמיתי בשעות החמות. הכל בקנה מידה קטן — זה לא חוף, זה מפרצון.</p>
+          <div class="note"><b>שלושה דברים שיעשו את ההבדל:</b> ① החניה זעירה ומתמלאת עד 11:00 — לכן 16:00, או חונים למעלה בכביש ויורדים ברגל. ② קחו <b>נעלי ים</b>, הקרקעית חלוקים ולא חול. ③ יש שביל חוף של 20 דקות לאיגואפרדה, ואפשר להשכיר SUP ב-20€ לשעה.</div></div></div>
+
+        <div class="item anchor" data-k="food"><div class="tm">20:00</div><div class="wt"><b>Begurio · ארוחת הסיכום<span class="tags"><span class="kind">אוכל</span></span></b>
+          <div class="what">המסעדה הכי מדוברת בבגור, קטלנית עם נגיעות צרפתיות.</div>
+          <p>פתוח בימי שני, כלומר זה החלון היחיד שלכם אליו. הערב האחרון בצפון.</p>
+          <div class="acts"><a class="btn" href="tel:+34625694482">📞 625 69 44 82</a></div></div></div>
+      </div>
+    </article>
+
+    <!-- D7 -->
+    <article class="day" id="d7" style="--tag:var(--sea);--tagsoft:rgba(14,77,92,.1)">
+      <div class="daytop" tabindex="0"><div class="dnum">7</div>
+        <div class="dmeta"><h3>אאוטלט בדרך חזרה</h3><div class="dt">שלישי · 1 בספטמבר</div><div class="stats">3 עוגנים · 1 בונוס · 2:20 נסיעה</div></div>
+        <div class="dtag">→ ברצלונה 🛍</div><span class="caret">▾</span></div>
+      <div class="dbody">
+        <div class="item bonus" data-k="see"><div class="tm">10:15</div><div class="wt"><b>פאלס<span class="tags"><span class="drive">🚗 15 דק׳</span><span class="cost">💶 חינם</span></span></b>
+          <div class="what">כפר ימי-ביניימי משוחזר על גבעה, מוקף שדות אורז.</div>
+          <p>הגרעין העתיק נקרא <b>אל פדרו</b> ומשוחזר במלואו — שלוש סמטאות אבן מקושתות, בתים מהמאה ה-14, ו<b>מגדל שעון גלילי</b> מהמאה ה-11 שהוא סימן ההיכר של הכפר. מנקודת התצפית רואים את שדות האורז של האזור עד הים ואת איי מדס באופק. סיבוב של 45 דקות, חניונים נוחים מסביב.</p></div></div>
+
+        <div class="item anchor star" data-k="shop"><div class="tm">13:00</div><div class="wt"><b>La Roca Village · אאוטלט<span class="tags"><span class="drive">🚗 1:15</span><span class="who">👥 כולם</span></span></b>
+          <div class="what">כפר אאוטלט של יותר מ-100 מותגים, בנוי כרחוב קניות פתוח.</div>
+          <p>לא קניון — מתחם חיצוני בנוי כעיירה קטנה עם חנויות משני צדי רחוב, ספסלים וכיכרות. מותגים בינלאומיים וספרדיים במחירי עודפים כל השנה. <b>המזל כאן גאוגרפי:</b> הוא יושב ישירות על ה-AP-7 בדרך מהקוסטה בראווה לברצלונה — אפס עקיפה. חניון תת-קרקעי ענק, פתוח עד 22:00, ויש שירות "ידיים חופשיות" שאוסף את השקיות מהחנויות כדי שלא תסחבו.</p>
+          <div class="note"><b>למה זה מושלם ליום האחרון:</b> ארבע–חמש שעות בקצב חופשי, כל אחד הולך לאן שבא לו, ויש מסעדות ופודטראקים באמצע. אחרי שישה ימי מסלול צפוף, זה סוג היום שכולם צריכים.</div>
+          <div class="acts"><a class="btn" href="https://www.thebicestercollection.com/la-roca-village/en" target="_blank">מידע ושעות ↗</a></div></div></div>
+
+        <div class="item anchor" data-k="go"><div class="tm">18:30</div><div class="wt"><b>צ׳ק-אין ליד השדה<span class="tags"><span class="drive">🚗 50 דק׳</span></span></b>
+          <div class="what">אל פראט — העיירה שבה נמצא שדה התעופה.</div>
+          <p>מחזירים רכב, או משאירים להחזרה בבוקר. ארוחה אחרונה רגועה ליד המלון.</p></div></div>
+
+        <div class="item anchor" data-k="go"><div class="tm">מחר</div><div class="wt"><b>טיסה 10:45 · טרמינל 1 🛫<span class="tags"><span class="kind">נסיעה</span></span></b>
+          <div class="what">LY394 חזרה לנתב״ג, נחיתה 15:50.</div>
+          <p>להיות בשדה ב-08:30. שאטל מהמלון. הלילה ליד השדה חוסך יציאה ב-06:45 מבגור עם רכב מלא.</p></div></div>
+      </div>
+    </article>
+
+    <div class="empty" id="empty">אין פריטים בסינון הזה.</div>
+  </div>
+</section>
+
+<!-- BOOKING -->
+<section id="booking" style="background:linear-gradient(var(--sand),var(--sand-deep))">
+  <div class="wrap">
+    <div class="sechead"><h2>מה להזמין</h2><div class="rule"></div></div>
+    <div class="prog"><div class="pnum" id="pnum">0/13</div><div class="bar"><i id="pbar"></i></div><small id="ptxt">מסמנים תוך כדי</small></div>
+    <div class="bgrid">
+      <div class="bcard"><h4>הכי דחוף <em>אוזל מהר</em></h4>
+        <div class="task"><input type="checkbox" id="t1"><label for="t1"><a href="https://www.fcbarcelona.com/en/tickets" target="_blank">כרטיסים למשחק · 6 יח׳ ↗</a><span>קיבולת מצומצמת בגלל השיפוץ — קנו מוקדם ורק רשמי</span></label></div>
+        <div class="task"><input type="checkbox" id="t2"><label for="t2"><a href="https://sagradafamilia.org/en/tickets" target="_blank">סגרדה פמיליה · 09:00 ↗</a><span>אוזל שבועות מראש</span></label></div>
+        <div class="task"><input type="checkbox" id="t3"><label for="t3"><a href="https://www.casabatllo.es/en/" target="_blank">קסה בטליו ↗</a><span>בונוס · רק אם החלטתם להיכנס</span></label></div>
+      </div>
+      <div class="bcard"><h4>מים ואטרקציות</h4>
+        <div class="task"><input type="checkbox" id="t4"><label for="t4"><a href="https://www.getyourguide.com/he-il/lloret-de-mar-l2322/lloret-de-mar-entry-ticket-to-waterworld-water-park-t1353378/" target="_blank">Water World · 6 יח׳ ↗</a><span>יום 4 · אונליין = דילוג על תור הקופה</span></label></div>
+        <div class="task"><input type="checkbox" id="t5"><label for="t5"><a href="https://www.getyourguide.com/he-il/sant-feliu-de-guixols-l98145/sant-feliu-de-guixols-costa-brava-kayak-snorkeling-tour-t424313/" target="_blank">קיאק + שנרקול · 6 יח׳ ↗</a><span>יום 5 · 10:00 · ביטול חינם עד 24ש׳</span></label></div>
+        <div class="task"><input type="checkbox" id="t6"><label for="t6"><a href="https://www.getyourguide.com/he-il/begur-l96718/costa-brava-stand-up-paddleboarding-at-sunrise-in-begur-t1031404/" target="_blank">SUP בזריחה · 2–4 יח׳ ↗</a><span>יום 6 · רק למי שקם ב-6</span></label></div>
+        <div class="task"><input type="checkbox" id="t7"><label for="t7"><a href="https://tickets.catedralbcn.org/en" target="_blank">קתדרלת ברצלונה ↗</a><span>~11€ · טרסת הגג +3€ בקופה</span></label></div>
+      </div>
+      <div class="bcard"><h4>מלונות</h4>
+        <div class="task"><input type="checkbox" id="t8"><label for="t8"><a href="https://www.booking.com/searchresults.html?ss=Eixample%2C+Barcelona" target="_blank">ברצלונה · Eixample ↗</a><span>לילות 1–2 · 3 חדרים או דירה</span></label></div>
+        <div class="task"><input type="checkbox" id="t9"><label for="t9"><a href="https://www.booking.com/searchresults.html?ss=Lloret+de+Mar" target="_blank">יורט ↗</a><span>לילות 3–4</span></label></div>
+        <div class="task"><input type="checkbox" id="t10"><label for="t10"><a href="https://www.booking.com/searchresults.html?ss=Begur" target="_blank">בגור ↗</a><span>לילות 5–6 · שקלו וילה לשישה</span></label></div>
+        <div class="task"><input type="checkbox" id="t11"><label for="t11"><a href="https://www.booking.com/searchresults.html?ss=El+Prat+de+Llobregat" target="_blank">אל פראט · ליד השדה ↗</a><span>לילה 7</span></label></div>
+      </div>
+      <div class="bcard"><h4>לוגיסטיקה</h4>
+        <div class="task"><input type="checkbox" id="t12"><label for="t12"><a href="https://www.rentalcars.com/" target="_blank">ואן 7 מקומות ↗</a><span>איסוף BCN T1 · 6 נוסעים + מזוודות</span></label></div>
+        <div class="task"><input type="checkbox" id="t13"><label for="t13"><a href="#eats">שולחנות ל-6 במסעדות ↓</a><span>סוף אוגוסט — חובה מראש בטלפון</span></label></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EATS -->
+<section id="eats">
+  <div class="wrap">
+    <div class="sechead"><h2>מסעדות</h2><div class="rule"></div><span class="count">26 מקומות</span></div>
+    <div class="warn">🐟 <b>דגים כן, פירות ים לא.</b> הבנתי מהבקשה לסושי שהאיסור הוא על שרימפס, קלמארי, תמנון וצדפות — אבל סלמון וטונה בסדר. עדיין הימנעתי ממסעדות שכל התפריט שלהן בנוי על פירות ים, והדגשתי <b>בשר, על האש, טאפאס וסושי</b>.<br><br>
+    📞 <b>לשישה בסוף אוגוסט — חובה להזמין.</b> טלפון בבוקר עובד הכי טוב. לחצו על המספר מהנייד כדי לחייג.</div>
+
+    <div class="subh">⭐ ההמלצות שלכם · אימתתי את כולן</div>
+    <div class="grid2">
+      <div class="eat pick"><div class="top"><h5>Robata</h5><span class="rt">★ 4.6 · 8,973</span></div><div class="loc">ברצלונה · אייסמפלה · יום 1</div><p>יפנית עם גריל רובטה — שיטת צלייה איטית על גחלים. אדממה כמהין, ניקיי מיקס (פרואני-יפני), גיוזה מטוגנת, פלפלי פדרון במיסו. טרסה חיצונית. פתוח 13:30–24:00.</p>
+      <div class="note" style="margin:0 0 9px;font-size:12.5px"><b>גילוי:</b> Robata (אנריק גראנאדוס 55) ו-Arko Sushi (מס׳ 63) הם <b>שמונה כניסות זה מזה</b>. אם אחד מלא, השני גיבוי אמיתי.</div>
+      <a class="btn" href="tel:+34937826000">📞 937 82 60 00</a></div>
+
+      <div class="eat pick"><div class="top"><h5>Harry's</h5><span class="rt">★ 4.5 · 9,691</span></div><div class="loc">ברצלונה · פסטות · יום 2</div><p>איטלקית על סמטת Passatge de la Concepció מס׳ 2. פטוצ׳יני, ריגטוני, סלט קיסר, וטירמיסו שמכינים על עגלה ליד השולחן — זה מה שכולם מצלמים.</p>
+      <div class="note" style="margin:0 0 9px;font-size:12.5px"><b>שקיפות:</b> נהיה ויראלי בטיקטוק, ויש ביקורות של אנשים שציפו ל-fine dining וקיבלו מסעדה איטלקית טובה. עם הציפייה הנכונה תיהנו.</div>
+      <a class="btn" href="tel:+34934599318">📞 934 59 93 18</a></div>
+
+      <div class="eat pick"><div class="top"><h5>Tragaluz</h5><span class="rt">★ 4.2 · 2,402</span></div><div class="loc">ברצלונה · אותה סמטה · יום 2</div><p>מספר 5 באותה סמטה. טרטר בקר מעושן, סלט בורטה, ארטישוק, סטייק טונה, צ׳יזקייק. 13:00–17:00 ו-19:30–00:30.</p>
+      <div class="note" style="margin:0 0 9px;font-size:12.5px"><b>שקיפות:</b> 4.2 — הנמוך ברשימה. הביקורת החוזרת: אין לתפריט זהות ברורה, איטלקי-צרפתי-ספרדי יחד. האוכל עצמו מקבל שבחים.</div>
+      <a class="btn" href="tel:+34934870621">📞 934 87 06 21</a></div>
+
+      <div class="eat pick"><div class="top"><h5>Trópico</h5><span class="rt">★ 4.9 · 9,112</span></div><div class="loc">ברצלונה · בראנץ׳ · יום 3</div><p>ההמלצה הכי חזקה מהרשימה שלכם — 4.9 עם 9,000 ביקורות זה נדיר. בראנץ׳ לטינו-אמריקאי: אוואוס רנצ׳רוס, ארפאס (לחמניות תירס ונצואליות) עם ביצים ובננה מטוגנת, אגס בנדיקט צמחוני. ביקורת אחת מתארת <b>שולחן של 14</b> עם שירות מושלם. 09:00–15:30.</p><a class="btn" href="tel:+34938348624">📞 938 34 86 24</a></div>
+
+      <div class="eat pick"><div class="top"><h5>Bloome by Sasha</h5><span class="rt">★ 4.8 · 4,846</span></div><div class="loc">ברצלונה · בוקר · שני סניפים</div><p>בראנץ׳ ללא גלוטן ומעוצב. Black Moon Benedict, טוסט אבוקדו-ביצה, אסאי באול. <b>סניף גותיק</b> (ויה לאיאטנה 45) 8:30–16:30, 5 דק׳ מהקתדרלה. <b>פאסאיג׳ סנט ז׳ואן 80</b> עד 19:00.</p>
+      <div class="note" style="margin:0 0 9px;font-size:12.5px"><b>שקיפות:</b> מנות קטנות למחיר, ולפעמים תור. ביקורות השירות מעורבות.</div>
+      <a class="btn" href="tel:+34602500335">📞 602 50 03 35</a></div>
+
+      <div class="eat pick"><div class="top"><h5>LA BRAVA Street Food</h5><span class="rt">★ 4.5 · 1,211</span></div><div class="loc">יורט · המבורגרים · יום 4</div><p>הכי זול ברשימה, והכי מתאים לערב שאחרי פארק המים. Truffle Master, Cheese Bomb, מקסיקני, וגם לזניה וגלידה. 10:00–01:00, בלי הזמנה.</p></div>
+
+      <div class="eat pick"><div class="top"><h5>Tribus by Casa Coco</h5><span class="rt">★ 4.7 · 311</span></div><div class="loc">יורט · ים-תיכוני · יום 3</div><p>בתוך מלון בוטיק, טרסה מוקפת עצי אורן. ים-תיכוני יצירתי, מחירים הוגנים, מקבלים קבוצות. ביקורת: <b>״דלגו על מסעדות הטיילת ובואו לכאן״</b>.</p>
+      <div class="note" style="margin:0 0 9px;font-size:12.5px"><b>שעות צרות:</b> א׳–ה׳ רק 20:00–22:00. ו׳–ש׳ 19:30–23:00.</div>
+      <a class="btn" href="tel:+34972980283">📞 972 98 02 83</a></div>
+
+      <div class="eat pick"><div class="top"><h5>Cap Sa Sal</h5><span class="rt">★ 4.2 · 2,063</span></div><div class="loc">בגור · נוף לים · יום 6</div><p>מסעדה במתחם מלון משנות ה-60 הבנוי במדרון הסלע. הנוף מקבל שבחים פה אחד, <b>ו-600 מ׳ מסה טונה</b>. שירות 13:00–16:00 ו-20:00–22:00.</p>
+      <div class="note" style="margin:0 0 9px;font-size:12.5px"><b>אזהרה אמיתית:</b> הגבלת שולחן 90 דקות שלא מציינים; פאייה מתומחרת לפי מנה ולא לפי זוג; מסרבים לשולחנות שמזמינים רק ראשונות. שאלו בטלפון.</div>
+      <a class="btn" href="tel:+34972624375">📞 972 62 43 75</a></div>
+    </div>
+
+    <div class="subh">🍣 סושי · עוד אפשרויות</div>
+    <div class="grid2">
+      <div class="eat"><div class="top"><h5>IMAKO SUSHI</h5><span class="rt">★ 4.9 · 222</span></div><div class="loc">קאלייה דה פלפרוז׳ל · 20 דק׳ מבגור</div><p><b>הדירוג הגבוה ביותר בכל הטיול.</b> אדממה כמהין שאנשים כותבים עליה שנעשתה לאובססיה, ספייסי טונה רול, טטאקי בקר, גלידת מאצ׳ה. ביקורות של אנשים שהיו ביפן ועדיין התלהבו. שווה את הנסיעה.</p><a class="btn" href="tel:+34872416590">📞 872 41 65 90</a></div>
+
+      <div class="eat"><div class="top"><h5>IKOYA Izakaya</h5><span class="rt">★ 4.7 · 4,601</span></div><div class="loc">ברצלונה · אל בורן</div><p><b>איזקאיה</b> = פאב יפני עם הרבה מנות קטנות לשיתוף, וזה עובד מצוין לשולחן של שישה. ניגירי מולהט, צ׳יקן קאראגה, ספייסי טונה רול, ווגיו ניגירי. מול שוק סנטה קתרינה.</p><a class="btn" href="tel:+34933101818">📞 933 10 18 18</a></div>
+
+      <div class="eat"><div class="top"><h5>Arko Sushi</h5><span class="rt">★ 4.8 · 6,581</span></div><div class="loc">ברצלונה · אייסמפלה</div><p>הדירוג הגבוה בעיר בכמות ביקורות כזו. טונה שמנה, סלמון, צלופח. תפריט טעימות ~95€. שמונה כניסות מ-Robata.</p><a class="btn" href="tel:+34938299572">📞 938 29 95 72</a></div>
+
+      <div class="eat"><div class="top"><h5>Shunka</h5><span class="rt">★ 4.7 · 2,391</span></div><div class="loc">ברצלונה · הרובע הגותי</div><p>הקלאסיקה. יפנית אותנטית עם בר סושי פתוח, ליד הקתדרלה. ביקורות של אנשים שחיו ביפן אומרות שזה אותו טעם. ווגיו מצוין, יקר. <span class="shut">סגור בימי שני.</span></p><a class="btn" href="tel:+34934124991">📞 934 12 49 91</a></div>
+
+      <div class="eat"><div class="top"><h5>KAI BAR JAPONÈS</h5><span class="rt">★ 4.8 · 276</span></div><div class="loc">יורט</div><p>הסושי הכי טוב ביורט. תפריט צהריים 4 מנות ב-30€, ווגיו גיוזה, טונה ניגירי. <span class="shut">סגור בימי שני.</span></p><a class="btn" href="tel:+34654537238">📞 654 53 72 38</a></div>
+
+      <div class="eat"><div class="top"><h5>Can Kai</h5><span class="rt">★ 4.2 · 763</span></div><div class="loc">בגור · במרכז העיירה</div><p>הסושי של בגור, טרסה חיצונית ומוזיקה. ספייסי סלמון, טונה כפולה, פואה גרא מכמהין. יקר יחסית, אבל פתוח כל יום כולל ראשון.</p><a class="btn" href="tel:+34972623560">📞 972 62 35 60</a></div>
+    </div>
+
+    <div class="subh">🥩 ברצלונה · בשר וטאפאס</div>
+    <div class="grid2">
+      <div class="eat"><div class="top"><h5>Ziryab Fusió</h5><span class="rt">★ 4.7 · 4,666</span></div><div class="loc">אל בורן</div><p>טאפאס עם נגיעות מזרח-תיכוניות שיהיו מוכרות לכולם: קרשי גבינות וחמון, תמרים בבייקון, קרוקטות, חלומי אפוי, ריזוטו דלעת. מנוהל על ידי צוות חירשים — חוויה אנושית שהנער יזכור.</p><a class="btn" href="tel:+34931874210">📞 931 87 42 10</a></div>
+
+      <div class="eat"><div class="top"><h5>el SET</h5><span class="rt">★ 4.9 · 1,298</span></div><div class="loc">אל בורן · יווני-ספרדי</div><p>הדירוג הכי גבוה בברצלונה. קטן ואינטימי עם מטבח פתוח. גלילות פטה בשומשום ודבש, פרובולונה עם כמהין, קרמה קטלנה. <b>קטן מאוד — לשישה חייבים להזמין.</b> ערב בלבד.</p><a class="btn" href="tel:+34930114086">📞 930 11 40 86</a></div>
+
+      <div class="eat"><div class="top"><h5>Steak House Barcelona</h5><span class="rt">★ 4.8 · 10,588</span></div><div class="loc">אייסמפלה · סטייקים</div><p>בשר מיושן 90 יום, וגריל לוהט שמביאים לשולחן כדי שכל אחד יצלה לעצמו — בלי תוספת תשלום. בדיוק סוג הדבר שעובד לשולחן עם טווח גילאים. 2 דק׳ מפאסאיג׳ דה גראסיה.</p><a class="btn" href="tel:+34931288640">📞 931 28 86 40</a></div>
+
+      <div class="eat"><div class="top"><h5>Can Culleretes</h5><span class="rt">★ 4.3 · 6,776</span></div><div class="loc">הרובע הגותי · קטלני היסטורי</div><p><b>המסעדה השנייה הוותיקה בספרד — פועלת ברציפות מאז 1786.</b> קירות מכוסים בתמונות מקוריות. אוכל קטלני מסורתי, העוף וצלעות הכבש מומלצים. באים בשביל החוויה. <span class="shut">סגור בימי שני.</span></p><a class="btn" href="tel:+34933173022">📞 933 17 30 22</a></div>
+
+      <div class="eat"><div class="top"><h5>Tapeo</h5><span class="rt">★ 4.5 · 4,788</span></div><div class="loc">אל בורן · טאפאס</div><p>צלעות חזיר איברי בדבש וחרדל, ואיבר-בורגר עם חמון ומיונז כמהין. מנות נדיבות, יש אזור מאחור לקבוצות.</p><a class="btn" href="tel:+34933101607">📞 933 10 16 07</a></div>
+
+      <div class="eat"><div class="top"><h5>Berry Brunch</h5><span class="rt">★ 4.8 · 6,859</span></div><div class="loc">אייסמפלה · בראנץ׳</div><p>פנקייקים, ביצים, בורגרים, המון אופציות צמחוניות. 09:00–16:00. הבן 13 יאהב את זה יותר מכל דבר קטלני.</p><a class="btn" href="tel:+34937687615">📞 937 68 76 15</a></div>
+    </div>
+
+    <div class="subh">🍤 יורט וטוסה · והצפון</div>
+    <div class="grid2">
+      <div class="eat"><div class="top"><h5>La Plaça</h5><span class="rt">★ 4.8 · 567</span></div><div class="loc">יורט · סטייקים</div><p>הביקורות אומרות <b>הסטייק הכי טוב שאכלו</b>, במחיר הוגן ובמנות גדולות. פתוח עד 01:00.</p><a class="btn" href="tel:+34644919577">📞 644 91 95 77</a></div>
+
+      <div class="eat"><div class="top"><h5>La Terrassa del Bella</h5><span class="rt">★ 4.7 · 2,142</span></div><div class="loc">יורט · טאפאס ובורגרים</div><p>יותר מקומיים מתיירים, וביורט זו מחמאה. פטטס בראבס אמיתיות, טאפאס. פתוח מ-08:00.</p><a class="btn" href="tel:+34972365322">📞 972 36 53 22</a></div>
+
+      <div class="eat"><div class="top"><h5>Restaurant La Placeta</h5><span class="rt">★ 4.6 · 3,447</span></div><div class="loc">טוסה · בכיכר העתיקה</div><p>בכיכר האבן בתוך העיר העתיקה — המיקום המושלם לצהריים של יום 3. תפריט יומי ב-29.50€.</p><a class="btn" href="tel:+34640789078">📞 640 78 90 78</a></div>
+
+      <div class="eat"><div class="top"><h5>Popa Tapes i Begudes</h5><span class="rt">★ 4.7 · 2,504</span></div><div class="loc">טוסה · על החוף</div><p>הטרסה מסתכלת ישר על הטירה — הנוף הכי יפה בטוסה. הביקורות: <b>הבורגר הכי טוב שאכלו</b>.</p><a class="btn" href="tel:+34872985435">📞 872 98 54 35</a></div>
+
+      <div class="eat"><div class="top"><h5>Humo Begur</h5><span class="rt">★ 4.8 · 132</span></div><div class="loc">בגור · brasería · יום 5</div><p><b>brasería</b> = בית גריל, כלומר הבשר הוא הליבה. אנטרקוט ו-secreto ibérico (נתח חזיר איברי) מומלצים. טרסה נעימה. <span class="shut">סגור בימי רביעי.</span></p><a class="btn" href="tel:+34654398065">📞 654 39 80 65</a></div>
+
+      <div class="eat"><div class="top"><h5>Son Molas</h5><span class="rt">★ 4.5 · 775</span></div><div class="loc">בגור · נוף לטירה</div><p>בקשו שולחן בחוץ עם נוף לטירה. קנלוני צלוי ברוטב פואה גרא וכמהין, צ׳יזקייק בסקי. יקר יותר. <span class="shut">סגור בימי רביעי.</span></p><a class="btn" href="tel:+34618779832">📞 618 77 98 32</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- BACKUP -->
+<section id="backup" style="background:linear-gradient(var(--sand-deep),var(--sand))">
+  <div class="wrap">
+    <div class="sechead"><h2>גיבוי · מה שלא נכנס</h2><div class="rule"></div><span class="count">12 אפשרויות</span></div>
+    <div class="plain"><p>כל אלה שקלתי והם באמת טובים — לא נכנסו בגלל זמן, לא בגלל איכות. שמרו למקרה שיום מתקצר, שמזג האוויר משתנה, או שפשוט בא לכם משהו אחר.</p></div>
+
+    <div class="subh">🏙 ברצלונה</div>
+    <div class="grid2">
+      <div class="eat"><div class="top"><h5>פארק גואל</h5><span class="rt">★ 4.4 · 238,203</span></div><div class="loc">גראסיה · 20 דק׳ מהמרכז</div><p>פארק עירוני שגאודי תכנן ב-1900 כשכונת יוקרה שנכשלה מסחרית והפכה לפארק. המפורסם בו הוא <b>ספסל הפסיפס המתפתל</b> על הטרסה העליונה, מכוסה שברי קרמיקה צבעונית בטכניקת trencadís, ומתחתיו אולם עמודים דורי. יש גם נוף על העיר עד הים. הורדתי מיום 2 כי הוא דורש נסיעה ושעתיים. <b>כניסה בחלונות זמן, להזמין מראש.</b></p><a class="btn" href="https://parkguell.barcelona/en" target="_blank">כרטיס ↗</a></div>
+
+      <div class="eat"><div class="top"><h5>בונקרים דל כרמל</h5><span class="rt">★ 4.6 · 17,508</span></div><div class="loc">נקודת תצפית · חינם</div><p>עמדות תותחים נגד מטוסים שנבנו ב-1937 במלחמת האזרחים הספרדית, על ראש גבעה מזרחית לעיר. אחרי המלחמה נבנתה שם שכונת פחונים שפונתה, ומה שנשאר הוא בסיס הבטון עם <b>הנוף הכי טוב בברצלונה</b> — 360 מעלות כולל הסגרדה פמיליה והים. <b>המקום שהצעירים יאהבו הכי הרבה</b>, במיוחד בשקיעה. חינם, אבל יש טיפוס. הביאו משהו לשתות ושבו על הבטון.</p></div>
+
+      <div class="eat"><div class="top"><h5>טיבידאבו</h5><span class="rt">★ 4.4 · 48,321</span></div><div class="loc">פארק שעשועים · על ההר</div><p>פארק השעשועים הוותיק בספרד, נפתח ב-1901 על פסגת ההר הגבוה ביותר מעל ברצלונה (512 מ׳), עם כנסייה ניאו-גותית בראש. משלב מתקנים היסטוריים משומרים — כמו מטוס מ-1928 שמסתובב מעל התהום — עם מתקנים מודרניים. <b>ההצעה הכי טובה לבן 13</b> אם בא לכם יום שהוא לא מוזיאונים. עולים ברכבל או ברכב.</p></div>
+
+      <div class="eat"><div class="top"><h5>רכבל מונז׳ואיק</h5><span class="rt">★ 4.4 · 27,316</span></div><div class="loc">מונז׳ואיק</div><p>רכבל בקבינות קטנות שעולה על גבעת מונז׳ואיק אל <b>מצודת מונז׳ואיק</b> — מבצר מהמאה ה-17 שמשקיף על הנמל. הנסיעה 5 דקות, והנוף על הנמל, העיר והים. באוגוסט זו דרך לראות את ההר בלי לטפס בחום. 10:00–21:00.</p></div>
+
+      <div class="eat"><div class="top"><h5>מזרקת הקסמים</h5><span class="rt">★ 4.6 · 90,877</span></div><div class="loc">מונז׳ואיק · חינם</div><p>מזרקה ענקית מ-1929 מול ארמון הפאלאו נסיונל, שמריצה מופע של סילוני מים, אור ומוזיקה מסונכרנים. חינם, וקהל של אלפים יושב על המדרגות.</p>
+      <div class="note" style="margin:0;font-size:12.5px"><b>אבל בדקו לפני:</b> המופע רץ רק חמישי–שבת 21:00–22:00. אצלכם חמישי הוא ערב המשחק ושישי אתם כבר ביורט — כלומר זה כנראה לא יסתדר.</div></div>
+
+      <div class="eat"><div class="top"><h5>שוק סנטה קתרינה</h5><span class="rt">★ 4.4 · 18,303</span></div><div class="loc">אל בורן · 90 שניות מהקתדרלה</div><p>שוק מזון שכונתי עם <b>גג גלי בפסיפס צבעוני</b> שהוא ציון דרך אדריכלי (שופץ ב-2005). בפנים — שוק מקומי אמיתי שבו קונים תושבי הרובע, הרבה פחות תיירותי מהבוקריה. אם תגיעו לרובע הגותי לפני 15:30 ביום 1, קפצו. <b>סגור בראשון.</b></p></div>
+    </div>
+
+    <div class="subh">🌊 קוסטה בראווה</div>
+    <div class="grid2">
+      <div class="eat"><div class="top"><h5>שנרקול באיי מדס</h5><span class="rt">★ מהמובילים באזור</span></div><div class="loc">לאסטרטיט · 40 דק׳ מבגור</div><p><b>ההמלצה הכי חזקה מהרשימה הזו.</b> שבעה איים סלעיים קטנים מול לאסטרטיט, שהוכרזו שמורה ימית מוגנת ב-1983 — ומאז הדיג אסור בהם. התוצאה היא <b>ריכוז חיי הים הגבוה ביותר בים התיכון המערבי</b>: להקות ענק של דגים, גרופרים גדולים שהתרגלו לבני אדם, ואלמוגים אדומים. סירה מוציאה לאיים, קופצים למים עם מסכה. ~2.5 שעות. אם תוותרו על משהו ביום 6, זה מה שהייתי שם במקום.</p><a class="btn" href="https://www.getyourguide.com/he-il/l-estartit-l97426/" target="_blank">לחפש סיור ↗</a></div>
+
+      <div class="eat"><div class="top"><h5>מוזיאון דאלי · פיגֶרֶס</h5><span class="rt">★ 4.6 · 52,150</span></div><div class="loc">פיגרס · 1:10 מבגור</div><p>לא מוזיאון רגיל: <b>סלבדור דאלי תכנן ובנה אותו בעצמו</b> על חורבות התיאטרון העירוני של עיר הולדתו, והוא גם קבור בתוכו. הגג מעוטר בביצים ענקיות ובפסלים מוזהבים, ובמרכז כיפת זכוכית גאודזית. בפנים חדרים סוריאליסטיים שלמים — כולל חדר שנראה כמו פני שחקנית כשמסתכלים עליו מזווית מסוימת. <b>גם מי שלא אוהב מוזיאונים יוצא מזה מסטול</b>, וזה כולל בני 13. 09:00–19:45, להזמין מראש.</p><a class="btn" href="https://www.salvador-dali.org/en/" target="_blank">כרטיס ↗</a></div>
+
+      <div class="eat"><div class="top"><h5>ג׳ירונה</h5><span class="rt">★ 4.7 · הקתדרלה</span></div><div class="loc">ג׳ירונה · 1 שעה מבגור</div><p>עיר פנימית עם עיר עתיקה משומרת יוצא דופן. <b>הרובע היהודי (אל קאל)</b> הוא מהמשומרים באירופה — סמטאות אבן צרות ומדרגות, ובתוכו מוזיאון תולדות היהודים בבית הכנסת האחרון ששרד. <b>הקתדרלה</b> בעלת <b>הספינה הגותית הרחבה בעולם</b> (23 מטר ללא עמודי תמך), ואליה עולים 90 מדרגות. בנוסף — הבתים הצבעוניים על נהר האונייר. הבחירה המובהקת ליום גשום או ליום שנמאס מהים.</p></div>
+
+      <div class="eat"><div class="top"><h5>קדקס + בית דאלי</h5><span class="rt">★ 4.5 · 15,587</span></div><div class="loc">פורטליגאט · 1:30 מבגור</div><p>עיירת דייגים לבנה בקצה הצפוני של החוף, מבודדת מאחורי רכס הרים ולכן נראית כאילו עצרה ב-1960. בפורטליגאט הסמוכה נמצא <b>הבית שבו דאלי חי 50 שנה</b> — צירוף של בקתות דייגים שחיבר זה לזה, עם חדר ביצה, בריכה בצורת שפתיים ודוב קוטב מפוחלץ בכניסה. יום ארוך (3 שעות נסיעה סה״כ) והכביש מפותל, ולכן לא נכנס. <b>חובה להזמין כרטיס מראש, אחרת לא נכנסים.</b></p><a class="btn" href="https://www.salvador-dali.org/en/museums/casa-salvador-dali-in-portlligat/" target="_blank">כרטיס ↗</a></div>
+
+      <div class="eat"><div class="top"><h5>קאלייה דה פלפרוז׳ל + יאפרנק</h5><span class="rt">★ קאמי דה רונדה</span></div><div class="loc">20 דק׳ מבגור</div><p>שני כפרי דייגים סמוכים, והקטע היפה ביותר של <b>הקאמי דה רונדה</b> — שביל חוף שנחצב במקור במאה ה-19 כדי שסיירי החופים יוכלו לרדוף אחרי מבריחים. הולכים 25 דקות לאורך הצוק מקאלייה ליאפרנק כשהים מתחת כל הדרך. הקשתות הלבנות של קאלייה הן התמונה הקלאסית של האזור. אפשר לשלב עם IMAKO סושי שנמצא בדיוק שם.</p></div>
+
+      <div class="eat"><div class="top"><h5>קטמרן עם ברביקיו</h5><span class="rt">★ 4.5 · 4,107</span></div><div class="loc">יוצא מיורט · 4 שעות</div><p>שיט בקטמרן (סירת מפרש דו-גופית ויציבה) לאורך החוף, עם ברביקיו ומשקאות על הסיפון ועצירות שחייה במפרצונים. אלטרנטיבה טובה ל-Water World אם מעדיפים ים אמיתי. פופולרי — להזמין מראש.</p><a class="btn" href="https://www.getyourguide.com/he-il/lloret-de-mar-l2322/" target="_blank">לחפש ↗</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- MONEY -->
+<section id="money">
+  <div class="wrap">
+    <div class="sechead"><h2>תקציב משוער</h2><div class="rule"></div><span class="count">לאדם, בלי טיסות ולינה</span></div>
+    <div class="plain">
+      <table>
+        <tr><th>פריט</th><th>הערה</th><th>לאדם</th></tr>
+        <tr><td>כרטיס למשחק</td><td>משתנה מאוד — קיבולת מצומצמת</td><td>80–200€</td></tr>
+        <tr><td>סגרדה פמיליה</td><td>לפי סוג הכרטיס</td><td>26–40€</td></tr>
+        <tr><td>קתדרלת ברצלונה</td><td>+3€ טרסת הגג</td><td>11–14€</td></tr>
+        <tr><td>קסה בטליו</td><td>בונוס</td><td>~35€</td></tr>
+        <tr><td>Water World</td><td>יום שלם</td><td>~40€</td></tr>
+        <tr><td>קיאק + שנרקול</td><td>שעתיים מודרך</td><td>~35€</td></tr>
+        <tr><td>SUP בזריחה</td><td>רק למי שהולך</td><td>~40€</td></tr>
+        <tr><td>אוכל</td><td>7 ימים · בראנץ׳+צהריים+ערב</td><td>350–500€</td></tr>
+        <tr><td>ואן + דלק + כבישי אגרה</td><td>מחולק ל-6</td><td>~90€</td></tr>
+        <tr><td>חניות ומטרו</td><td>חופים, ערים, יום המשחק</td><td>~40€</td></tr>
+        <tr class="tot"><td>סה״כ משוער</td><td>בלי קניות</td><td>700–1,050€</td></tr>
+      </table>
+      <p style="margin-top:12px;font-size:13.5px">המספרים הם הערכה לתכנון בלבד — מחירים משתנים, ובמיוחד כרטיסי המשחק. קניות באאוטלט ובפאסאיג׳ דה גראסיה לא נכללות כי הן לגמרי תלויות בכם.</p>
+    </div>
+  </div>
+</section>
+
+<!-- INFO -->
+<section id="info" style="background:linear-gradient(var(--sand),var(--sand-deep))">
+  <div class="wrap">
+    <div class="sechead"><h2>מידע שימושי</h2><div class="rule"></div></div>
+    <div class="bgrid">
+      <div class="bcard"><h4>חירום ובריאות</h4>
+        <div class="task"><label><a href="tel:112">112 · חירום ארצי ↗</a><span>משטרה, אמבולנס, כיבוי אש — עובד בכל אירופה, גם באנגלית</span></label></div>
+        <div class="task"><label><span><b>Farmàcia</b> — בתי מרקחת מסומנים בצלב ירוק מהבהב. תמיד יש אחד תורן 24/7 בכל עיר, הרשימה תלויה על דלת כל בית מרקחת.</span></label></div>
+        <div class="task"><label><span><b>כרטיס בריאות אירופי לא תקף לישראלים</b> — ודאו שיש ביטוח נסיעות, במיוחד עם פעילויות מים.</span></label></div>
+        <div class="task"><label><span><b>מדוזות</b> מופיעות לפעמים בקוסטה בראווה. בחופים המרכזיים יש תחנת עזרה ראשונה ודגל מיוחד.</span></label></div>
+      </div>
+
+      <div class="bcard"><h4>נהיגה וחניה</h4>
+        <div class="task"><label><span><b>AP-7</b> הוא כביש האגרה הראשי צפונה. מאז 2021 רוב הקטעים חינם, אבל יש קטעים בתשלום — שמרו מזומן או כרטיס בהישג יד.</span></label></div>
+        <div class="task"><label><span><b>כחול = בתשלום, ירוק = לתושבים, לבן = חינם.</b> משלמים במכונה בצד הרחוב ומניחים את הפתק על הדשבורד.</span></label></div>
+        <div class="task"><label><span><b>ZBE ברצלונה</b> — אזור פליטות נמוכות. רכב שכור אירופי תקין בדרך כלל בסדר, אבל ודאו מול חברת ההשכרה.</span></label></div>
+        <div class="task"><label><span><b>הכבישים החופיים</b> (GI-682, הדרך לסה טונה) צרים ומפותלים. הזמנים במסמך כבר מביאים את זה בחשבון.</span></label></div>
+      </div>
+
+      <div class="bcard"><h4>קצב החיים בספרד</h4>
+        <div class="task"><label><span><b>ארוחת ערב ב-21:00 היא נורמלית.</b> מסעדות רבות בכלל לא פותחות לפני 20:00. זה דווקא מסתדר לכם — מנוחה אחה״צ ואז יוצאים.</span></label></div>
+        <div class="task"><label><span><b>סיאסטה</b> — הרבה עסקים קטנים מחוץ לערים סוגרים 14:00–17:00. אל תסתמכו על אוכל בשעות האלה בעיירות קטנות.</span></label></div>
+        <div class="task"><label><span><b>שווקים סגורים בימי ראשון</b> — בוקריה, סנטה קתרינה, סנט אנטוני. לכן הם ביום 1.</span></label></div>
+        <div class="task"><label><span><b>טיפ</b> אינו חובה בספרד. 5–10% במסעדה טובה זה יפה, וזה הכל.</span></label></div>
+      </div>
+
+      <div class="bcard"><h4>מה לארוז</h4>
+        <div class="task"><label><span><b>נעלי ים</b> — סה טונה ורוב מפרצוני בגור הם חלוקים. זה ההבדל בין ליהנות לבין לצלוע.</span></label></div>
+        <div class="task"><label><span><b>נעלי הליכה</b> — טירת בגור, הווילה וייה בטוסה והקאמי דה רונדה כולם דורשים טיפוס.</span></label></div>
+        <div class="task"><label><span><b>קרם הגנה</b> יקר בספרד. תביאו מהארץ, במיוחד ליום הפארק ולסיורי הים.</span></label></div>
+        <div class="task"><label><span><b>שכבה ארוכה</b> — הערבים על החוף מתקררים, וברוח טרמונטנה זה מורגש.</span></label></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br>
+  <span class="ver">גרסה 5 · עודכן 26 ביולי 2026</span><br>
+  <button class="prbtn" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
+  <button class="prbtn" id="rst">איפוס הסימונים שלי</button>
+</footer>
+
+<script>
+(function(){
+  var nav=document.getElementById('navrow');
+  nav.addEventListener('click',function(e){
+    var b=e.target.closest('.pill'); if(!b)return;
+    nav.querySelectorAll('.pill').forEach(function(p){p.classList.remove('on')});
+    b.classList.add('on');
+    var go=b.dataset.go;
+    if(go==='all'){window.scrollTo({top:0});return;}
+    var el=document.getElementById(go);
+    if(el){el.classList.remove('shut');el.scrollIntoView({block:'start'});}
+  });
+
+  document.querySelectorAll('.daytop').forEach(function(t){
+    function tg(){t.parentElement.classList.toggle('shut');}
+    t.addEventListener('click',tg);
+    t.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();tg();}
+    });
+  });
+
+  var fr=document.getElementById('filterrow');
+  var srch=document.getElementById('srch');
+  var items=[].slice.call(document.querySelectorAll('.item'));
+  var days=[].slice.call(document.querySelectorAll('.day'));
+  var cnt=document.getElementById('cnt'), empty=document.getElementById('empty');
+  var cat='all', onlyAnchor=false, q='';
+
+  items.forEach(function(it){ it._txt=(it.textContent||'').toLowerCase(); });
+
+  function apply(){
+    var shown=0;
+    items.forEach(function(it){
+      var okCat=(cat==='all')||(it.dataset.k===cat);
+      var okAnc=!onlyAnchor||it.classList.contains('anchor');
+      var okQ=!q||it._txt.indexOf(q)>-1;
+      var ok=okCat&&okAnc&&okQ;
+      it.classList.toggle('hide',!ok);
+      if(ok)shown++;
+    });
+    days.forEach(function(d){
+      var any=d.querySelectorAll('.item:not(.hide)').length;
+      d.style.display=any?'':'none';
+      if((cat!=='all'||onlyAnchor||q)&&any)d.classList.remove('shut');
+    });
+    var filtering=(cat!=='all'||onlyAnchor||q);
+    cnt.textContent=filtering?shown+' פריטים':'';
+    empty.classList.toggle('show',shown===0);
+  }
+
+  fr.addEventListener('click',function(e){
+    var c=e.target.closest('.chip'); if(!c)return;
+    if(c.dataset.k==='anchor'){
+      onlyAnchor=!onlyAnchor; c.classList.toggle('on',onlyAnchor);
+    }else{
+      cat=c.dataset.k;
+      fr.querySelectorAll('.chip:not(.anchor)').forEach(function(x){x.classList.remove('on')});
+      c.classList.add('on');
+    }
+    apply();
+  });
+
+  var tmr;
+  srch.addEventListener('input',function(){
+    clearTimeout(tmr);
+    tmr=setTimeout(function(){ q=srch.value.trim().toLowerCase(); apply(); },140);
+  });
+
+  var boxes=[].slice.call(document.querySelectorAll('.task input'));
+  var pbar=document.getElementById('pbar'),pnum=document.getElementById('pnum'),ptxt=document.getElementById('ptxt');
+  var KEY='cb2026.checklist';
+
+  // Storage is unavailable in some embedded previews and in private mode.
+  // Fall back to memory so the checklist still works, just without persistence.
+  var mem={}, hasLS=false;
+  try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); hasLS=true; }catch(e){}
+  function load(){
+    if(!hasLS) return mem;
+    try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ return {}; }
+  }
+  function save(o){
+    if(!hasLS){ mem=o; return; }
+    try{ localStorage.setItem(KEY,JSON.stringify(o)); }catch(e){}
+  }
+
+  function refresh(){
+    var done=boxes.filter(function(b){return b.checked}).length;
+    var pct=Math.round(done/boxes.length*100);
+    pbar.style.width=pct+'%'; pnum.textContent=done+'/'+boxes.length;
+    ptxt.textContent = done===0?'מסמנים תוך כדי' : done===boxes.length?'הכל סגור — נסיעה טובה! ✈️' : pct+'% הושלם';
+  }
+
+  var state=load();
+  boxes.forEach(function(b){
+    if(state[b.id]){ b.checked=true; b.closest('.task').classList.add('done'); }
+    b.addEventListener('change',function(){
+      b.closest('.task').classList.toggle('done',b.checked);
+      var s=load(); s[b.id]=b.checked; save(s);
+      refresh();
+    });
+  });
+  refresh();
+
+  var rst=document.getElementById('rst');
+  if(rst) rst.addEventListener('click',function(){
+    save({});
+    boxes.forEach(function(b){ b.checked=false; b.closest('.task').classList.remove('done'); });
+    refresh();
+  });
+
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(en){
+      en.forEach(function(x){
+        if(!x.isIntersecting)return;
+        nav.querySelectorAll('.pill').forEach(function(p){
+          p.classList.toggle('on',p.dataset.go===x.target.id);
+        });
+      });
+    },{rootMargin:'-150px 0px -65% 0px'});
+    days.forEach(function(d){io.observe(d)});
+  }
+})();
+</script>
+</body>
+</html>
