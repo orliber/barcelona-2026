@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0E4D5C">
-<meta name="app-version" content="15">
+<meta name="app-version" content="16">
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -360,6 +360,93 @@
   .upd.show{transform:translateX(-50%) translateY(0)}
   .upd button{background:#FCF9F2;color:var(--sea);border:0;border-radius:8px;padding:7px 13px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer;flex:0 0 auto}
   .upd .x{background:transparent;color:#9DC7C3;padding:6px 8px;font-size:15px;line-height:1}
+
+  /* ================= MOBILE PASS ================= */
+  /* רשת ביטחון: שום טקסט לא נחתך */
+  .ttl,.ename,.emeta,.orig,.what,.dr,.dr li,.note,.warn,.gist,.dstat,.kv span,.legc,.eat p,.plain p,.plain li,td,th{
+    overflow-wrap:anywhere;word-break:normal}
+  .wt,.ebody,.einfo,.dmeta,.note div,.warn div{min-width:0}
+
+  @media(max-width:700px){
+    /* מגע: יעדים גדולים יותר */
+    .ib{min-height:40px;min-width:40px;padding:8px 10px;border-radius:10px}
+    .ib.rt{padding:8px 11px}
+    .ico{gap:6px;margin-top:11px}
+    .fc{min-height:36px;padding:8px 13px;font-size:12.5px}
+    .pill{padding:9px 14px;font-size:13px}
+    .task input{width:21px;height:21px}
+    .erow{min-height:64px}
+    .row{min-height:60px}
+
+    /* קריאות: אין טקסט מתחת ל-12px */
+    body{font-size:16px}
+    .orig{font-size:12px;line-height:1.5}
+    .emeta{font-size:12px}
+    .gist{font-size:12px;gap:5px}
+    .dstat{font-size:11.5px;gap:4px 9px}
+    .what{font-size:13.5px}
+    .dr{font-size:14px;padding:12px 13px;line-height:1.65}
+    .dr li{margin-bottom:6px}
+    .kv span{font-size:12px;padding:4px 9px}
+    .eat p{font-size:14px}
+    .wx span{font-size:10.5px}
+    .wx b{font-size:14px}
+
+    /* צ׳יפ המרחק: לגלוש לשורה שנייה במקום להיחתך */
+    .legc{white-space:normal;line-height:1.5;font-size:11.5px;padding:4px 10px}
+    .leg{padding-inline-start:44px;align-items:flex-start;padding-top:2px;padding-bottom:2px}
+
+    /* כותרת פריט: מרווח נשימה סביב התגית */
+    .ttl{line-height:1.35}
+    .pickmark{margin-inline-start:5px;vertical-align:1px}
+    .ename{line-height:1.35}
+  }
+
+  @media(max-width:560px){
+    /* טבלאות: מתפרקות לכרטיסים במקום להידחס לשלוש עמודות */
+    .plain table tr{display:grid;grid-template-columns:1fr auto;gap:1px 12px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+    .plain table td,.plain table th{border:0;padding:0}
+    .plain table th{display:none}
+    .plain table td:nth-child(1){font-family:'Heebo';font-weight:700;font-size:14px;grid-column:1;grid-row:1}
+    .plain table td:nth-child(3){grid-column:2;grid-row:1;text-align:left;white-space:nowrap;font-family:'Heebo';font-weight:700;color:var(--sea)}
+    .plain table td:nth-child(2){grid-column:1/-1;grid-row:2;font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-top:2px}
+    .plain table tr.tot{border-top:2px solid var(--line);border-bottom:0;margin-top:4px;padding-top:12px}
+    .plain table tr.tot td:nth-child(1),.plain table tr.tot td:nth-child(3){font-size:15px;color:var(--sea)}
+    /* טבלת הסגירות: יום+אזור בשורה, הפירוט מתחת */
+    .clo tr{grid-template-columns:auto 1fr}
+    .clo td:nth-child(1){grid-column:1;grid-row:1}
+    .clo td:nth-child(2){grid-column:2;grid-row:1;text-align:left;font-size:12px;color:var(--ink-soft);font-family:'Heebo';font-weight:600;white-space:nowrap}
+    .clo td:nth-child(3){grid-column:1/-1;grid-row:2;font-size:13px;line-height:1.6;margin-top:3px;color:var(--ink-soft)}
+
+    /* כרטיס הטיסה: לא נדחס */
+    .seg{padding:12px 13px;gap:6px}
+    .pt{min-width:52px}
+    .pt b{font-size:16px}
+    .pt span{font-size:10px}
+    .arrow em{font-size:10px;padding:0 5px}
+    .fly-h b{font-size:14px}
+    .fly-h span{font-size:11px}
+
+    /* כותרת יום: פחות צפוף */
+    .daytop{padding:13px 13px;gap:10px}
+    .dnum{font-size:25px;min-width:28px}
+    .dmeta h3{font-size:16px;line-height:1.3}
+    .dmeta .dt{font-size:12px}
+    .hero{padding:32px 0 30px}
+    .fact{padding:7px 11px}
+    .fact b{font-size:13px}
+    section{padding:26px 0}
+    .sechead h2{font-size:23px}
+  }
+
+  @media(max-width:380px){
+    .legc s{display:none}          /* מסתירים את פירוט הק״מ במסכים צרים במיוחד */
+    .erate{padding:3px 6px;font-size:11.5px}
+    .th{width:34px;height:34px}
+    .sc{width:20px;height:20px}
+    .row .tm{min-width:34px;font-size:10.5px}
+    .leg{padding-inline-start:40px}
+  }
 </style>
 </head>
 <body>
@@ -602,7 +689,7 @@
   <button id="updGo">רענון</button>
   <button class="x" id="updX" aria-label="סגור">✕</button>
 </div>
-<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 15 · עודכן 28 ביולי 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
+<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 16 · עודכן 28 ביולי 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
 </footer> <script>
 (function(){
   var $=function(s,c){return (c||document).querySelector(s)};
@@ -746,7 +833,7 @@
   });
 
   /* checklist */
-  var boxes=$$('.task input'), KEY='cb2026.v15';
+  var boxes=$$('.task input'), KEY='cb2026.v16';
   var pbar=$('#pbar'), pnum=$('#pnum'), ptxt=$('#ptxt');
   var mem={}, hasLS=false;
   try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); hasLS=true; }catch(e){}
