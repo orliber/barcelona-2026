@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0E4D5C">
+<meta name="app-version" content="13">
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -353,6 +354,11 @@
     .ename{font-size:14px}
     .ebody{padding:0 12px 12px}
   }
+
+  .upd{position:fixed;left:50%;transform:translateX(-50%) translateY(120%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:90;display:flex;align-items:center;gap:11px;background:var(--sea);color:#FCF9F2;border-radius:13px;padding:11px 15px;box-shadow:0 6px 24px rgba(8,48,59,.28);font-family:'Heebo';font-weight:600;font-size:13.5px;max-width:calc(100vw - 28px);transition:transform .3s cubic-bezier(.2,.8,.3,1)}
+  .upd.show{transform:translateX(-50%) translateY(0)}
+  .upd button{background:#FCF9F2;color:var(--sea);border:0;border-radius:8px;padding:7px 13px;font-family:'Heebo';font-weight:700;font-size:12.5px;cursor:pointer;flex:0 0 auto}
+  .upd .x{background:transparent;color:#9DC7C3;padding:6px 8px;font-size:15px;line-height:1}
 </style>
 </head>
 <body>
@@ -590,7 +596,12 @@
       <p style="margin-top:10px;font-size:13px"><b>ברביעי</b> סגורים Humo ו-Son Molas בבגור — לא רלוונטי לכם, אתם שם בראשון ובשני. <b>בראשון</b> הקתדרלה פתוחה לתיירים רק 14:00–16:30.</p>
     </div>
  <div class="sos"> <a href="tel:112"><svg class="i i-lg"><use href="#i-alert"/></svg>112 · חירום</a> <a href="tel:+97239771111"><svg class="i i-lg"><use href="#i-phone"/></svg>אל על</a> <a href="https://www.google.com/maps/search/?api=1&query=farmacia+de+guardia" target="_blank" rel="noopener"><svg class="i i-lg"><use href="#i-pill"/></svg>בית מרקחת תורן</a> <a href="https://translate.google.com/?sl=es&tl=iw" target="_blank" rel="noopener"><svg class="i i-lg"><use href="#i-lang"/></svg>תרגום</a> </div> <div class="bgrid"> <div class="bcard"><h4>מה לארוז <em>Lite = בלי מזוודה</em></h4> <div class="task"><input type="checkbox" id="p1"><label for="p1"><strong>נעלי ים</strong><span>סה טונה, קאלה סלגֶר ורוב המפרצונים הם חלוקים חדים. זה ההבדל בין ליהנות לצלוע.</span></label></div> <div class="task"><input type="checkbox" id="p2"><label for="p2"><strong>נעלי הליכה נוחות</strong><span>טירת בגור, וילה וייה, והרובע הגותי — הכל אבן ומדרגות.</span></label></div> <div class="task"><input type="checkbox" id="p3"><label for="p3"><strong>קרם הגנה עמיד למים</strong><span>יקר בספרד. שני ימי מים מלאים בתוכנית.</span></label></div> <div class="task"><input type="checkbox" id="p4"><label for="p4"><strong>שכבה ארוכה לערב</strong><span>ל-SUP ב-6:45 וליציע בקמפ נואו.</span></label></div> <div class="task"><input type="checkbox" id="p5"><label for="p5"><strong>מתאם חשמל אירופי (Type F)</strong><span>ומטען נייד — יום המשחק ארוך.</span></label></div> <div class="task"><input type="checkbox" id="p6"><label for="p6"><strong>שקית בד מתקפלת</strong><span>שקיות בספרד בתשלום, ויש שני ימי קניות.</span></label></div> <div class="task"><input type="checkbox" id="p7"><label for="p7"><strong>בגדים צנועים לכנסיות</strong><span>כתפיים וברכיים מכוסות — נאכף בקתדרלה ובסגרדה.</span></label></div> <div class="task"><input type="checkbox" id="p8"><label for="p8"><strong>מסכת שנרקול</strong><span>אופציונלי, אבל המים בסה טונה צלולים.</span></label></div> </div> <div class="bcard"><h4>נהיגה וחניה</h4> <div class="task"><label><strong>חניה לפי צבע</strong><span><b>כחול</b> = בתשלום (משלמים במכונה ומניחים פתק על הדשבורד) · <b>ירוק</b> = לתושבים · <b>לבן</b> = חינם.</span></label></div> <div class="task"><label><strong>AP-7 — כביש האגרה הראשי</strong><span>רוב הקטעים חינם מאז 2021, אך לא כולם. שמרו כרטיס אשראי בהישג יד.</span></label></div> <div class="task"><label><strong>ZBE ברצלונה</strong><span>אזור פליטות נמוכות. רכב שכור אירופי בדרך כלל תקין, אבל ודאו מול חברת ההשכרה.</span></label></div> <div class="task"><label><strong>הכבישים החופיים צרים</strong><span>GI-682 והדרך לסה טונה מפותלים מאוד. הזמנים במסמך כבר מביאים את זה בחשבון.</span></label></div> <div class="task"><label><strong>חניה בחופים</strong><span>בסוף אוגוסט הכל מתמלא עד 10:00. לפני 9 או אחרי 16 — אין אמצע.</span></label></div> </div> <div class="bcard"><h4>קצב החיים בספרד</h4> <div class="task"><label><strong>ארוחת ערב ב-21:00 היא נורמלית</strong><span>מסעדות רבות בכלל לא פותחות לפני 20:00. זה דווקא מסתדר לכם — מנוחה אחה״צ ואז יוצאים.</span></label></div> <div class="task"><label><strong>סיאסטה</strong><span>עסקים קטנים מחוץ לערים סוגרים 14:00–17:00. אל תסתמכו על אוכל בשעות האלה בעיירות קטנות.</span></label></div> <div class="task"><label><strong>שווקים סגורים בראשון</strong><span>בוקריה, סנטה קתרינה, סנט אנטוני. לכן הם ביום 1.</span></label></div> <div class="task"><label><strong>טיפ אינו חובה</strong><span>5–10% במסעדה טובה זה יפה, וזה הכל.</span></label></div> <div class="task"><label><strong>קטלאנית לצד ספרדית</strong><span>שלטים רבים בקטלאנית. <b>Bon dia</b> = בוקר טוב, <b>Gràcies</b> = תודה, <b>Si us plau</b> = בבקשה.</span></label></div> </div> <div class="bcard"><h4>בריאות ובטיחות</h4> <div class="task"><label><strong>112 — מספר החירום</strong><span>משטרה, אמבולנס וכיבוי אש. עובד בכל אירופה, וגם באנגלית.</span></label></div> <div class="task"><label><strong>בתי מרקחת</strong><span>מסומנים בצלב ירוק מהבהב. תמיד יש אחד תורן 24/7 בכל עיר — הרשימה תלויה על דלת כל בית מרקחת.</span></label></div> <div class="task"><label><strong>ביטוח נסיעות חובה</strong><span>הכרטיס האירופי לא תקף לישראלים, ויש בתוכנית קיאקים, סאפ ופארק מים.</span></label></div> <div class="task"><label><strong>מדוזות</strong><span>מופיעות לפעמים בקוסטה בראווה. בחופים המרכזיים יש תחנת עזרה ראשונה ודגל מיוחד.</span></label></div> <div class="task"><label><strong>כייסים</strong><span>הראמבלה, הבוקריה, המטרו וברסלונטה. תיק מלפנים, בלי ארנק בכיס אחורי.</span></label></div> </div> </div> </div>
-</section> <footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 13 · עודכן 27 ביולי 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
+</section> <div class="upd" id="upd" role="status">
+  <span>יצאה גרסה חדשה של התוכנייה</span>
+  <button id="updGo">רענון</button>
+  <button class="x" id="updX" aria-label="סגור">✕</button>
+</div>
+<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 13 · עודכן 27 ביולי 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
 </footer> <script>
 (function(){
   var $=function(s,c){return (c||document).querySelector(s)};
@@ -776,6 +787,30 @@
     },{rootMargin:'-160px 0px -65% 0px'});
     days.forEach(function(d){io.observe(d)});
   }
+
+  /* ---- auto update check ---- */
+  (function(){
+    var meta=document.querySelector('meta[name="app-version"]');
+    if(!meta||!window.fetch) return;
+    var cur=meta.content, bar=document.getElementById('upd'), dismissed=false;
+    document.getElementById('updX').addEventListener('click',function(){ dismissed=true; bar.classList.remove('show'); });
+    document.getElementById('updGo').addEventListener('click',function(){
+      location.replace(location.pathname+'?v='+Date.now());
+    });
+    function check(){
+      if(dismissed||document.hidden) return;
+      fetch(location.pathname+'?_='+Date.now(),{cache:'no-store'})
+        .then(function(r){ return r.ok?r.text():null })
+        .then(function(t){
+          if(!t) return;
+          var m=t.match(/name="app-version" content="(\d+)"/);
+          if(m && m[1]!==cur) bar.classList.add('show');
+        }).catch(function(){});
+    }
+    setTimeout(check,8000);
+    setInterval(check,300000);
+    document.addEventListener('visibilitychange',function(){ if(!document.hidden) check(); });
+  })();
 })();
 </script>
 </body>
