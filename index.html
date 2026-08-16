@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0E4D5C">
-<meta name="app-version" content="22">
+<meta name="app-version" content="23">
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -476,15 +476,9 @@
      כדי שיראו ויתנהגו זהה — לחיצה לפתיחה, אותם כפתורים — ולא כמו ווידג'ט מודבק בצד. */
   .item.group .tm i{color:var(--plum);font-size:9px;font-weight:700}
   .gi-who{font-family:'Heebo';font-weight:600;font-size:10.5px;color:var(--ink-soft);opacity:.75;margin-top:8px}
-  .ib.rm{background:rgba(165,0,68,.08);border-color:rgba(165,0,68,.22);color:var(--garnet)}
-  .ib.rm:hover{border-color:rgba(165,0,68,.4);color:var(--garnet)}
-  .ib.ed{background:rgba(14,77,92,.07);border-color:rgba(14,77,92,.22);color:var(--sea)}
-  .ib.ed:hover{border-color:rgba(14,77,92,.4);color:var(--sea)}
   .newbadge{display:inline-block;font-family:'Heebo';font-weight:700;font-size:10px;color:#fff;background:var(--sun);border-radius:8px;padding:2px 7px;margin-inline-start:7px;vertical-align:middle;line-height:1.4}
 
   /* ---------- CONTENT EDITS (עריכה חיה של המסלול המקורי) ---------- */
-  .ib.edrow{background:rgba(107,74,115,.08);border-color:rgba(107,74,115,.24);color:var(--plum)}
-  .ib.edrow:hover{border-color:rgba(107,74,115,.42);color:var(--plum)}
   .editbadge{display:inline-flex;align-items:center;gap:3px;font-family:'Heebo';font-weight:700;font-size:10px;color:var(--plum);background:rgba(107,74,115,.1);border-radius:8px;padding:2px 7px;margin-inline-start:7px;vertical-align:middle;line-height:1.4;cursor:default}
 
   /* ---------- RESTAURANT RESERVE + VOTE ---------- */
@@ -513,6 +507,22 @@
   .tllbl{display:block;font-size:11.5px;color:var(--ink);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tlchip.past{opacity:.5}
   .tlchip.today{box-shadow:0 0 0 2px var(--tag,var(--sea)) inset}
+
+  /* ---------- SWIPE-TO-REVEAL עריכה/מחיקה (בטלפון: החלקה ימינה. במחשב: hover) ---------- */
+  .swiperow{position:relative;overflow:hidden;border-radius:8px}
+  .swipeactions{position:absolute;left:0;top:0;bottom:0;display:flex;z-index:0}
+  .swipeactions button{width:58px;border:none;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:'Heebo';font-weight:700;font-size:10.5px;cursor:pointer;padding:0}
+  .swipeactions button .i{width:16px;height:16px}
+  .swipeactions .sa-edit{background:var(--sea)}
+  .swipeactions .sa-del{background:var(--garnet)}
+  .swiperow>.row{position:relative;z-index:1;background:var(--sand);transition:transform .2s ease;touch-action:pan-y}
+  #groupList .swiperow>.row{background:var(--card)}
+  .swiperow.dragging>.row{transition:none}
+  .swiperow.open>.row{transform:translateX(var(--reveal,58px))}
+  @media(hover:hover) and (pointer:fine){
+    .swiperow:not(.dragging):hover>.row{transform:translateX(var(--reveal,58px))}
+  }
+  .swiperow:not(.dragging):focus-within>.row{transform:translateX(var(--reveal,58px))}
 
   #groupList{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:0 15px}
   #groupList:empty{display:none}
@@ -793,7 +803,7 @@
   <button id="updGo">רענון</button>
   <button class="x" id="updX" aria-label="סגור">✕</button>
 </div>
-<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 22 · עודכן 17 באוגוסט 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
+<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 23 · עודכן 17 באוגוסט 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
 </footer> <script src="js/app.js" defer></script>
 <script src="js/weather.js" defer></script>
 <script type="module" src="js/shared.js"></script>

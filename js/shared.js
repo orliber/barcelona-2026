@@ -125,17 +125,6 @@ function buildItemCard(docSnap){
     a.innerHTML = '<svg class="i"><use href="#i-globe"/></svg><span>קישור</span>';
     ico.appendChild(a);
   }
-  var editBtn = document.createElement('button');
-  editBtn.type = 'button';
-  editBtn.className = 'ib ed';
-  editBtn.innerHTML = '<svg class="i"><use href="#i-edit"/></svg><span>עריכה</span>';
-  ico.appendChild(editBtn);
-
-  var delBtn = document.createElement('button');
-  delBtn.type = 'button';
-  delBtn.className = 'ib rm';
-  delBtn.innerHTML = '<svg class="i"><use href="#i-trash"/></svg><span>הסרה</span>';
-  ico.appendChild(delBtn);
   wt.appendChild(ico);
 
   var who = document.createElement('div');
@@ -143,7 +132,30 @@ function buildItemCard(docSnap){
   who.textContent = 'נוסף ע״י ' + (it.addedBy || 'מישהו מהקבוצה') + ' · ' + dayRangeLabel(it.day, it.dayEnd);
   wt.appendChild(who);
 
-  card.appendChild(row);
+  // עריכה+מחיקה נחשפות בהחלקה ימינה (טלפון) או hover (מחשב) — לא כפתורים קבועים
+  // בתוך .ico, כדי שהשורה תישאר נקייה ותתנהג כמו ברשימות iOS מוכרות.
+  var editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.className = 'sa-edit';
+  editBtn.innerHTML = '<svg class="i"><use href="#i-edit"/></svg><span>עריכה</span>';
+
+  var delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'sa-del';
+  delBtn.innerHTML = '<svg class="i"><use href="#i-trash"/></svg><span>הסרה</span>';
+
+  var actions = document.createElement('div');
+  actions.className = 'swipeactions';
+  actions.appendChild(editBtn);
+  actions.appendChild(delBtn);
+
+  var swiperow = document.createElement('div');
+  swiperow.className = 'swiperow';
+  swiperow.style.setProperty('--reveal', '116px');
+  swiperow.appendChild(actions);
+  swiperow.appendChild(row);
+
+  card.appendChild(swiperow);
   card.appendChild(wt);
 
   return { card: card, delBtn: delBtn, editBtn: editBtn };

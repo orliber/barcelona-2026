@@ -2,6 +2,7 @@
   var $=function(s,c){return (c||document).querySelector(s)};
   var $$=function(s,c){return [].slice.call((c||document).querySelectorAll(s))};
   var days=$$('.day'), legs=$$('.leg'), nav=$('#navrow');
+  var justDragged=false; /* מונע פתיחה/סגירה בטעות של פריט מיד אחרי החלקה (swipe) */
 
   /* bonus toggle per day */
   days.forEach(function(d){
@@ -32,7 +33,8 @@
   document.addEventListener('click',function(e){
     var r=e.target.closest('.row');
     if(r){
-      var it=r.parentElement, o=it.classList.toggle('open');
+      if(justDragged){ return; }
+      var it=r.closest('.item'), o=it.classList.toggle('open');
       r.setAttribute('aria-expanded',o);
       if(!o){ /* reset tabs when the item is closed */
         $$('.dr',it).forEach(function(x){x.classList.remove('open')});
@@ -337,20 +339,96 @@
     });
   })();
 
-  /* ---- מזהה יציב לכל בולט במסלול המקורי + כפתור עריכה, לטובת js/shared.js (עריכה חיה) ---- */
+  /* ---- מזהה יציב לכל בולט במסלול המקורי + כפתור עריכה בהחלקה/hover, לטובת js/shared.js (עריכה חיה) ---- */
   (function(){
     days.forEach(function(d){
       var items=$$('.item',d).filter(function(it){ return !it.classList.contains('group'); });
       items.forEach(function(it,i){
         it.dataset.eid = d.id+'-'+i;
-        var ico=$('.ico',it);
-        if(!ico || $('.edrow',ico)) return;
+        var row=$('.row',it);
+        if(!row || row.parentElement.classList.contains('swiperow')) return;
+        var wrap=document.createElement('div');
+        wrap.className='swiperow';
+        wrap.style.setProperty('--reveal','58px');
+        row.parentNode.insertBefore(wrap,row);
+        var actions=document.createElement('div');
+        actions.className='swipeactions';
         var b=document.createElement('button');
-        b.type='button'; b.className='ib edrow'; b.dataset.editfor=it.dataset.eid;
+        b.type='button'; b.className='edrow sa-edit'; b.dataset.editfor=it.dataset.eid;
         b.innerHTML='<svg class="i"><use href="#i-edit"/></svg><span>עריכה</span>';
-        ico.appendChild(b);
+        actions.appendChild(b);
+        wrap.appendChild(actions);
+        wrap.appendChild(row);
       });
     });
+  })();
+
+  /* ---- מנוע החלקה/hover גנרי לחשיפת עריכה+מחיקה (עובד גם על פריטי קבוצה שמתווספים דינמית) ---- */
+  (function(){
+    var current=null, openWrap=null;
+
+    function closeWrap(el){
+      if(!el) return;
+      el.classList.remove('open');
+      $('.row',el).style.transform='';
+      if(openWrap===el) openWrap=null;
+    }
+    function closeAllExcept(except){
+      $$('.swiperow.open').forEach(function(el){ if(el!==except) closeWrap(el); });
+    }
+
+    document.addEventListener('pointerdown',function(e){
+      var target=e.target;
+      /* ה-FAB הצף (position:fixed) יכול לשבת פיזית מעל שורה בת-החלקה, בפינה
+         השמאלית-תחתונה הקבועה שלו. אם יש שורה כזו ממש מתחתיו באותה נקודה,
+         מעדיפים להתחיל החלקה על השורה במקום ללחוץ על ה-FAB. */
+      if(target.id==='gfab'){
+        var stack=document.elementsFromPoint(e.clientX,e.clientY);
+        var under=stack.filter(function(el){ return el.classList && el.classList.contains('swiperow'); })[0];
+        if(!under) return;
+        target=under;
+      }
+      if(target.closest('.swipeactions')){
+        setTimeout(function(){ closeAllExcept(null); },150);
+        return;
+      }
+      var wrap=target.closest('.swiperow');
+      if(!wrap){ closeAllExcept(null); return; }
+      var row=$('.row',wrap);
+      var reveal=parseInt(getComputedStyle(wrap).getPropertyValue('--reveal'))||58;
+      current={wrap:wrap,row:row,startX:e.clientX,startY:e.clientY,dragging:false,reveal:reveal,pointerId:e.pointerId,base:wrap.classList.contains('open')?reveal:0};
+    });
+
+    document.addEventListener('pointermove',function(e){
+      if(!current||e.pointerId!==current.pointerId) return;
+      var dx=e.clientX-current.startX, dy=e.clientY-current.startY;
+      if(!current.dragging){
+        if(Math.abs(dx)>8 && Math.abs(dx)>Math.abs(dy)){
+          current.dragging=true;
+          current.wrap.classList.add('dragging');
+        } else if(Math.abs(dy)>8){ current=null; return; }
+        else return;
+      }
+      var pos=Math.max(0,Math.min(current.reveal,current.base+dx));
+      current.pos=pos;
+      current.row.style.transform='translateX('+pos+'px)';
+    });
+
+    function endDrag(e){
+      if(!current) return;
+      if(current.dragging){
+        var openIt=(current.pos||0) > current.reveal*0.4;
+        current.row.style.transform=openIt?'translateX('+current.reveal+'px)':'';
+        current.wrap.classList.toggle('open',openIt);
+        current.wrap.classList.remove('dragging');
+        if(openIt){ closeAllExcept(current.wrap); openWrap=current.wrap; }
+        justDragged=true;
+        setTimeout(function(){ justDragged=false; },50);
+      }
+      current=null;
+    }
+    document.addEventListener('pointerup',endDrag);
+    document.addEventListener('pointercancel',endDrag);
   })();
 
   /* ---- צ'קבוקס "הזמנו מקום" + הצבעת "רוצים לנסות" על כל מסעדה ברשימה הראשית ---- */
