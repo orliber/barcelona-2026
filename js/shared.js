@@ -128,13 +128,13 @@ function buildItemCard(docSnap){
   var editBtn = document.createElement('button');
   editBtn.type = 'button';
   editBtn.className = 'ib ed';
-  editBtn.innerHTML = '<span>✏️ עריכה</span>';
+  editBtn.innerHTML = '<svg class="i"><use href="#i-edit"/></svg><span>עריכה</span>';
   ico.appendChild(editBtn);
 
   var delBtn = document.createElement('button');
   delBtn.type = 'button';
   delBtn.className = 'ib rm';
-  delBtn.innerHTML = '<span>✕ הסרה</span>';
+  delBtn.innerHTML = '<svg class="i"><use href="#i-trash"/></svg><span>הסרה</span>';
   ico.appendChild(delBtn);
   wt.appendChild(ico);
 
@@ -439,6 +439,24 @@ function mountAddUi(modal){
   fab.addEventListener('click', openModal);
   var addBtn = document.getElementById('addBtn');
   if (addBtn) addBtn.addEventListener('click', openModal);
+
+  // ה-FAB רלוונטי בעיקר ליד "מהקבוצה" — מסתירים אותו אחרי שגוללים משם והלאה (מסעדות/
+  // גיבוי/תקציב/מידע), כי בפינה השמאלית-תחתונה הקבועה שלו הוא עלול לכסות כפתורים
+  // אחרים באותו אזור (כמו הצבעת הלב על מסעדות). בדיקה לפי מיקום גלילה, לא
+  // IntersectionObserver — כדי שהמצב יהיה נכון מיד גם אחרי קפיצת גלילה, לא רק מעברים הדרגתיים.
+  var groupSection = document.getElementById('group');
+  if (groupSection){
+    var ticking = false;
+    function updateFabVisibility(){
+      var groupBottom = groupSection.offsetTop + groupSection.offsetHeight;
+      fab.classList.toggle('hide', (window.scrollY + window.innerHeight * 0.4) > groupBottom);
+      ticking = false;
+    }
+    window.addEventListener('scroll', function(){
+      if (!ticking){ requestAnimationFrame(updateFabVisibility); ticking = true; }
+    }, { passive: true });
+    updateFabVisibility();
+  }
 }
 
 /*
@@ -892,8 +910,23 @@ function boot(){
       .subscribe();
     refresh();
 
+    // כשמישהו מוסיף/עורך הזמנת מלון או רכב דרך הלוח החי, מסמנים לבד את המשימה
+    // המתאימה ב"מה להזמין" — לפי הסוג והיום שה-AI קבע בפועל (לא מה שהוקלד בטופס,
+    // כי ה-AI עלול לתקן את היום מתוך מסמך שהועלה). לא מבטלים סימון לבד, רק מוסיפים.
+    var HOTEL_TASK_BY_DAY = { d1:'t8', d2:'t8', d3:'t9', d4:'t9', d5:'t10', d6:'t10', d7:'t11' };
+    function autoCheckRelated(item){
+      if (!item) return;
+      var taskId = null;
+      if (item.type === 'hotel' && HOTEL_TASK_BY_DAY[item.day]) taskId = HOTEL_TASK_BY_DAY[item.day];
+      else if (item.type === 'transport') taskId = 't12';
+      if (!taskId) return;
+      supabase.from('checklist').upsert({ task_id: taskId, checked: true, updated_at: new Date().toISOString() }).then(function(res){
+        if (res.error) console.error('[shared.js] auto-check failed', res.error);
+      });
+    }
+
     function submitItem(data){
-      return callFunction('add-item', data);
+      return callFunction('add-item', data).then(function(res){ autoCheckRelated(res.item); return res; });
     }
 
     function submitExtract(file){
@@ -901,7 +934,7 @@ function boot(){
     }
 
     function submitEdit(data){
-      return callFunction('update-item', data);
+      return callFunction('update-item', data).then(function(res){ autoCheckRelated(res.item); return res; });
     }
 
     function onEdit(docSnap){

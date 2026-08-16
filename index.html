@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0E4D5C">
-<meta name="app-version" content="21">
+<meta name="app-version" content="22">
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -28,12 +28,6 @@
     --line:rgba(22,38,42,.13); --line-soft:rgba(22,38,42,.07);
     --warn-bg:#FFF3E9;
     --nav-h:52px;
-  }
-  html[data-theme="dark"]{
-    --sand:#0F1B1D; --card:#182A2D; --sand-deep:#0A1416;
-    --ink:#ECE7DA; --ink-soft:#A9B4B2;
-    --line:rgba(255,255,255,.14); --line-soft:rgba(255,255,255,.07);
-    --warn-bg:rgba(194,86,47,.14);
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html{overflow-x:clip;max-width:100%;scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + 46px);-webkit-text-size-adjust:100%}
@@ -497,7 +491,6 @@
   .rsvbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;padding-top:11px;border-top:1px solid var(--line-soft)}
   .rsvbar .task{border-bottom:none;padding:0;flex:1}
   .votebtn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:rgba(255,255,255,.7);border-radius:20px;padding:5px 11px;font-family:'Heebo';font-weight:700;font-size:12px;color:var(--ink-soft);cursor:pointer;transition:all .13s;flex:0 0 auto}
-  html[data-theme="dark"] .votebtn{background:rgba(255,255,255,.05)}
   .votebtn.on{border-color:rgba(165,0,68,.35);color:var(--garnet);background:rgba(165,0,68,.08)}
   .votebtn .vh{font-size:14px;line-height:1}
 
@@ -507,8 +500,19 @@
   .day.past .daytop{opacity:.55}
   .day.past .daytop:hover{opacity:.8}
 
-  /* ---------- THEME TOGGLE ---------- */
-  .themebtn{flex:0 0 auto;font-family:'Heebo';font-weight:600;font-size:15px;padding:7px 11px;border-radius:20px;border:1px solid var(--line);background:transparent;color:var(--ink-soft);cursor:pointer;line-height:1}
+  /* ---------- TIMELINE STRIP (המסלול במבט אחד) ---------- */
+  .tlouter{margin:14px 0 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tlouter::-webkit-scrollbar{display:none}
+  .tlstrip{display:flex;gap:8px;padding-bottom:2px}
+  .tlchip{flex:0 0 auto;width:92px;text-align:start;border:1px solid var(--line);border-top:3px solid var(--tag,var(--sea));background:var(--card);border-radius:11px;padding:8px 10px;cursor:pointer;transition:all .13s}
+  .tlchip:hover{border-color:var(--tag,var(--sea))}
+  .tlchip.on{background:var(--tag,var(--sea));border-color:var(--tag,var(--sea))}
+  .tlchip.on .tlnum,.tlchip.on .tldate,.tlchip.on .tllbl{color:#fff}
+  .tlnum{display:block;font-family:'Suez One',serif;font-size:18px;line-height:1;color:var(--tag,var(--sea))}
+  .tldate{display:block;font-family:'Heebo';font-weight:700;font-size:10.5px;color:var(--ink-soft);margin-top:3px}
+  .tllbl{display:block;font-size:11.5px;color:var(--ink);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tlchip.past{opacity:.5}
+  .tlchip.today{box-shadow:0 0 0 2px var(--tag,var(--sea)) inset}
 
   #groupList{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:0 15px}
   #groupList:empty{display:none}
@@ -517,8 +521,9 @@
   .btn-add:hover{filter:brightness(1.08)}
   .gempty{font-size:13.5px;color:var(--ink-soft);padding:6px 2px}
 
-  .fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:80;width:54px;height:54px;border-radius:50%;background:var(--sun);color:#fff;border:none;box-shadow:0 4px 16px rgba(194,86,47,.4);font-size:26px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+  .fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:80;width:54px;height:54px;border-radius:50%;background:var(--sun);color:#fff;border:none;box-shadow:0 4px 16px rgba(194,86,47,.4);font-size:26px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:opacity .18s,transform .18s}
   .fab:hover{filter:brightness(1.06)}
+  .fab.hide{opacity:0;transform:scale(.8);pointer-events:none}
 
   .modal-bg{position:fixed;inset:0;background:rgba(8,48,59,.55);z-index:90;display:none;align-items:flex-end;justify-content:center;padding:0}
   .modal-bg.show{display:flex}
@@ -575,6 +580,8 @@
 <symbol id="i-landmark" viewBox="0 0 24 24"><path d="M3 22h18M4 10v8M9 10v8M15 10v8M20 10v8M2 10h20L12 3 2 10Z"/></symbol>
 <symbol id="i-pill" viewBox="0 0 24 24"><path d="M10.5 20.5a5 5 0 0 1-7-7l7-7a5 5 0 0 1 7 7Z"/><path d="m8.5 8.5 7 7"/></symbol>
 <symbol id="i-lang" viewBox="0 0 24 24"><path d="M5 8h11M9 4v4M11.5 16C10 13 8 9.5 8 8M13 20l4-9 4 9M14.5 17h5"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6Z"/><path d="M10 11v6M14 11v6"/></symbol>
 
 <symbol id="s-plane" viewBox="0 0 32 32"><path d="M4 20h24M6 20l3-9h4l-1 9M17 11h4l6 9" stroke-width="1.6"/><circle cx="10" cy="24" r="2" stroke-width="1.6"/><circle cx="23" cy="24" r="2" stroke-width="1.6"/></symbol>
 <symbol id="s-hotel" viewBox="0 0 32 32"><path d="M3 26V14a2 2 0 0 1 2-2h22a2 2 0 0 1 2 2v12M3 21h26M8 12V8a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v4" stroke-width="1.6"/></symbol>
@@ -608,9 +615,9 @@
 <symbol id="s-cable" viewBox="0 0 32 32"><path d="M2 7l28 6M13 10v4M11 14h10v9H11z" stroke-width="1.6"/><path d="M11 18h10M4 28h24" stroke-width="1.6"/></symbol>
 </defs></svg> <header class="hero"> <div class="wrap"> <div class="eyebrow">מסלול טיול · 6 נוסעים</div> <h1>קוסטה בראווה<br>& ברצלונה</h1> <p class="sub">שבעה ימים בין הים לעיר — משחק בקמפ נואו, סה טונה, פארק מים, זריחה על הסאפ, שווקים וקניות.</p> <div class="facts"> <div class="fact"><b>26.8 – 2.9.2026</b><span>7 לילות</span></div> <div class="fact"><b>ואן 7 מקומות</b><span>6 נוסעים</span></div> <div class="fact"><b>דגים כן · פירות ים לא</b><span>הכל מותאם</span></div> </div> <div class="countdown" id="countdown" role="status"></div> </div> <svg class="wv" viewBox="0 0 1440 30" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path d="M0,17 C240,32 480,2 720,15 C960,28 1200,5 1440,17 L1440,30 L0,30 Z" fill="#F4EDDF"/></svg>
 </header> <div class="wrap"> <div class="fly shut"> <div class="fly-h"><svg class="i i-lg"><use href="#i-plane"/></svg><b>אל על · LY393 / LY394</b><span>Economy Lite</span><svg class="chev"><use href="#i-chev"/></svg></div> <div class="seg"> <div class="pt"><b>05:45</b><span>TLV · T3</span></div> <div class="arrow"><em>ד׳ 26.8 · 4ש׳ 40ד׳ · LY393</em></div> <div class="pt"><b>09:25</b><span>BCN · T1</span></div> </div> <div class="seg"> <div class="pt"><b>10:45</b><span>BCN · T1</span></div> <div class="arrow"><em>ד׳ 2.9 · 4ש׳ 5ד׳ · LY394</em></div> <div class="pt"><b>15:50</b><span>TLV · T3</span></div> </div> <div class="fly-f"> <button class="ib" data-t="flyinfo" aria-expanded="false"><svg class="i"><use href="#i-info"/></svg><span>פרטים</span></button> <a class="ib buy" href="https://www.elal.com/he/PassengersInfo/Pages/OnlineCheckin.aspx" target="_blank" rel="noopener"><svg class="i"><use href="#i-ticket"/></svg><span>צ׳ק-אין</span></a> <a class="ib" href="https://www.aeroport-barcelona-elprat.com/en/" target="_blank" rel="noopener"><svg class="i"><use href="#i-plane"/></svg><span>שדה BCN</span></a> <a class="ib tel" href="tel:+97239771111"><svg class="i"><use href="#i-phone"/></svg><span>אל על</span></a> </div> <div class="dr info" id="flyinfo" style="margin:0 17px 15px"> <p style="margin-bottom:9px"><b>הלוך:</b> LY393, רביעי 26.8, נתב״ג טרמינל 3 בשעה 05:45 → ברצלונה טרמינל 1 בשעה 09:25. משך 4:40.<br> <b>חזור:</b> LY394, רביעי 2.9, ברצלונה טרמינל 1 בשעה 10:45 → נתב״ג טרמינל 3 בשעה 15:50. משך 4:05.</p> <p style="margin-bottom:9px"><b>מתי להגיע:</b> טיסה בינלאומית מנתב״ג — שלוש שעות לפני, כלומר <b>02:45 בשדה</b>, יציאה מהבית ~01:45. בחזרה מברצלונה — 08:30 בטרמינל 1.</p> <p><b>EES בגבול אירופה:</b> רישום ביומטרי (טביעות אצבע ותמונה) לאזרחים שאינם אירופים, פועל מאוקטובר 2025. באוגוסט זה מוסיף 45–75 דקות לביקורת הדרכונים בכניסה.</p> <div class="note hot" style="margin-top:11px"><svg class="i i-lg"><use href="#i-alert"/></svg><div><b>הכי חשוב — כבודה: הכרטיס הוא Economy Lite, כלומר 0PC.</b> אין מזוודה לבטן המטוס. מה שכן מותר: <b>טרולי אחד עד 8 ק״ג</b> במידות 56×45×25 ס״מ, <b>ועוד תיק אישי קטן</b> 30×38×18 ס״מ. לשבעה ימים עם קניות באאוטלט זה כנראה לא מספיק — <b>קנו תוספת מזוודה מראש באתר אל על.</b> קנייה בשדה יקרה משמעותית.</div></div> </div> </div>
-</div> <nav class="navbar"> <div class="navrow" id="navrow"> <button class="pill on" data-go="all">הכל</button> <button class="pill" data-go="d1">1 · נחיתה</button> <button class="pill" data-go="d2">2 · המשחק</button> <button class="pill" data-go="d3">3 · יורט</button> <button class="pill" data-go="d4">4 · פארק מים</button> <button class="pill" data-go="d5">5 · קיאקים</button> <button class="pill" data-go="d6">6 · סה טונה</button> <button class="pill" data-go="d7">7 · אאוטלט</button> <button class="pill" data-go="booking">הזמנות</button> <button class="pill" data-go="group">מהקבוצה</button> <button class="pill" data-go="eats">מסעדות</button> <button class="pill" data-go="backup">גיבוי</button> <button class="pill" data-go="money">תקציב</button> <button class="pill" data-go="info">שימושי</button> <button type="button" class="themebtn" id="themeBtn" aria-label="החלפת מצב כהה/בהיר">🌙</button> </div>
+</div> <nav class="navbar"> <div class="navrow" id="navrow"> <button class="pill on" data-go="all">הכל</button> <button class="pill" data-go="d1">1 · נחיתה</button> <button class="pill" data-go="d2">2 · המשחק</button> <button class="pill" data-go="d3">3 · יורט</button> <button class="pill" data-go="d4">4 · פארק מים</button> <button class="pill" data-go="d5">5 · קיאקים</button> <button class="pill" data-go="d6">6 · סה טונה</button> <button class="pill" data-go="d7">7 · אאוטלט</button> <button class="pill" data-go="booking">הזמנות</button> <button class="pill" data-go="group">מהקבוצה</button> <button class="pill" data-go="eats">מסעדות</button> <button class="pill" data-go="backup">גיבוי</button> <button class="pill" data-go="money">תקציב</button> <button class="pill" data-go="info">שימושי</button> </div>
 </nav> <div class="filterbar"> <div class="filterrow" id="filterrow"> <span class="srchw"><svg class="i i-sm"><use href="#i-search"/></svg><input class="srch" id="srch" type="search" placeholder="חיפוש" aria-label="חיפוש"></span> <span class="sep"></span> <button class="chip on" data-k="all"><span>הכל</span></button> <button class="chip" data-k="sea"><svg class="i i-sm"><use href="#i-waves"/></svg><span>מים</span></button> <button class="chip" data-k="food"><svg class="i i-sm"><use href="#i-food"/></svg><span>אוכל</span></button> <button class="chip" data-k="shop"><svg class="i i-sm"><use href="#i-bag"/></svg><span>קניות</span></button> <button class="chip" data-k="see"><svg class="i i-sm"><use href="#i-landmark"/></svg><span>סיורים</span></button> <button class="chip" data-k="go"><svg class="i i-sm"><use href="#i-car"/></svg><span>נסיעה</span></button> <span class="sep"></span> <button class="chip anchor" data-k="anchor"><svg class="i i-sm"><use href="#i-anchor"/></svg><span>עוגנים</span></button> </div>
-</div> <section> <div class="wrap"> <div class="sechead"><h2>המסלול</h2><div class="rule"></div><span class="count" id="cnt" aria-live="polite"></span></div> <div class="plain" style="border-inline-start:3px solid var(--plum)"> <h4 style="color:var(--plum)">איך משתמשים בזה</h4><p>לוחצים על יום כדי לפתוח אותו, ואז על שורה כדי לראות הסבר, מה להביא, טלפון, מפה ואתר. <b>עוגן</b> = ליבת היום. אפשרויות נוספות מוסתרות מתחת לכפתור בסוף כל יום.</p> </div> <!-- ==================== D1 ==================== --> <article class="day shut" id="d1" data-date="2026-08-26" style="--tag:var(--sea);--tagsoft:rgba(14,77,92,.1)"> <div class="daytop" tabindex="0" role="button"><div class="dnum">1</div> <div class="dmeta"><h3>נחיתה — יום בעומס נמוך</h3><div class="dt">רביעי · 26 באוגוסט · ברצלונה</div><div class="gist"><span>הרובע הגותי</span><em>›</em><span>הקתדרלה</span><em>›</em><span>לה בוקריה</span><em>›</em><span>ברסלונטה</span><em>›</em><span>Robata</span></div><div class="dstat"><span><svg class="i"><use href="#i-anchor"/></svg>5 עצירות עיקריות</span><span><svg class="i"><use href="#i-car"/></svg>25 דק׳ נסיעה</span><span><svg class="i"><use href="#i-info"/></svg>הכל בהליכה או מטרו</span></div></div> <div class="dtag">ברצלונה</div><span class="caret"><svg class="i"><use href="#i-chev"/></svg></span></div> <div class="dbody"> <div class="wx" data-day="d1"><div><svg class="i"><use href="#i-thermo-hi"/></svg><b data-wx="hi">29°</b><span>מקסימום</span></div><div><svg class="i"><use href="#i-thermo-lo"/></svg><b data-wx="lo">23°</b><span>מינימום</span></div><div><svg class="i"><use href="#i-waves"/></svg><b>26°</b><span>מי הים</span></div><div><svg class="i"><use href="#i-sunrise"/></svg><b>07:13</b><span>זריחה</span></div><div><svg class="i"><use href="#i-sunset"/></svg><b>20:37</b><span>שקיעה</span></div><div><svg class="i"><use href="#i-sun"/></svg><b data-wx="fc">בהיר</b><span>תחזית</span></div></div>
+</div> <section> <div class="wrap"> <div class="sechead"><h2>המסלול</h2><div class="rule"></div><span class="count" id="cnt" aria-live="polite"></span></div> <div class="tlouter"><div class="tlstrip" id="tlstrip"></div></div> <div class="plain" style="border-inline-start:3px solid var(--plum)"> <h4 style="color:var(--plum)">איך משתמשים בזה</h4><p>לוחצים על יום כדי לפתוח אותו, ואז על שורה כדי לראות הסבר, מה להביא, טלפון, מפה ואתר. <b>עוגן</b> = ליבת היום. אפשרויות נוספות מוסתרות מתחת לכפתור בסוף כל יום.</p> </div> <!-- ==================== D1 ==================== --> <article class="day shut" id="d1" data-date="2026-08-26" style="--tag:var(--sea);--tagsoft:rgba(14,77,92,.1)"> <div class="daytop" tabindex="0" role="button"><div class="dnum">1</div> <div class="dmeta"><h3>נחיתה — יום בעומס נמוך</h3><div class="dt">רביעי · 26 באוגוסט · ברצלונה</div><div class="gist"><span>הרובע הגותי</span><em>›</em><span>הקתדרלה</span><em>›</em><span>לה בוקריה</span><em>›</em><span>ברסלונטה</span><em>›</em><span>Robata</span></div><div class="dstat"><span><svg class="i"><use href="#i-anchor"/></svg>5 עצירות עיקריות</span><span><svg class="i"><use href="#i-car"/></svg>25 דק׳ נסיעה</span><span><svg class="i"><use href="#i-info"/></svg>הכל בהליכה או מטרו</span></div></div> <div class="dtag">ברצלונה</div><span class="caret"><svg class="i"><use href="#i-chev"/></svg></span></div> <div class="dbody"> <div class="wx" data-day="d1"><div><svg class="i"><use href="#i-thermo-hi"/></svg><b data-wx="hi">29°</b><span>מקסימום</span></div><div><svg class="i"><use href="#i-thermo-lo"/></svg><b data-wx="lo">23°</b><span>מינימום</span></div><div><svg class="i"><use href="#i-waves"/></svg><b>26°</b><span>מי הים</span></div><div><svg class="i"><use href="#i-sunrise"/></svg><b>07:13</b><span>זריחה</span></div><div><svg class="i"><use href="#i-sunset"/></svg><b>20:37</b><span>שקיעה</span></div><div><svg class="i"><use href="#i-sun"/></svg><b data-wx="fc">בהיר</b><span>תחזית</span></div></div>
         <div class="note hot"><svg class="i i-lg"><use href="#i-alert"/></svg><div><b>לילה ללא שינה:</b> טיסה ב-05:45 = יציאה מהבית ב-01:45.  בניתי את היום עם <b>עוגן תוכן אחד בלבד</b> וחלון מנוחה של שעתיים.</div></div> <div class="item anchor" data-k="go"><button class="row" type="button" aria-expanded="false"><span class="tm">09:25<i></i></span><span class="th"><svg class="sc"><use href="#s-plane"/></svg></span><span class="ttl">נחיתה · טרמינל 1</span><svg class="chev"><use href="#i-chev"/></svg></button><div class="wt"> <div class="orig">Barcelona–El Prat (BCN) · Terminal 1</div>
           <div class="what">שדה התעופה של ברצלונה, אל פראט — 18 ק״מ דרומית לעיר.</div> <div class="ico"> <button class="ib" data-t="d1a" aria-expanded="false"><svg class="i"><use href="#i-info"/></svg><span>מידע</span></button> <a class="ib" href="https://www.aeroport-barcelona-elprat.com/en/" target="_blank" rel="noopener"><svg class="i"><use href="#i-globe"/></svg><span>אתר</span></a>
             <a class="ib" href="https://www.google.com/maps/search/?api=1&query=41.2891331%2C2.0747619" target="_blank" rel="noopener"><svg class="i"><use href="#i-pin"/></svg><span>מפה</span></a> </div> <div class="dr info" id="d1a"><div class="kv"><span><svg class="i i-sm"><use href="#i-clock"/></svg>צאו מהשדה ~11:00</span><span>איסוף ואן</span></div>
@@ -786,7 +793,7 @@
   <button id="updGo">רענון</button>
   <button class="x" id="updX" aria-label="סגור">✕</button>
 </div>
-<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 21 · עודכן 17 באוגוסט 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
+<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 22 · עודכן 17 באוגוסט 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
 </footer> <script src="js/app.js" defer></script>
 <script src="js/weather.js" defer></script>
 <script type="module" src="js/shared.js"></script>

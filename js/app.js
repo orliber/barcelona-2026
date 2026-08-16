@@ -124,14 +124,16 @@
   }
 
   /* nav */
+  function goToSection(go){
+    if(go==='all'){window.scrollTo({top:0,behavior:'smooth'});return;}
+    var el=document.getElementById(go);
+    if(el){ el.classList.remove('shut'); setTimeout(function(){el.scrollIntoView({block:'start'})},60); }
+  }
   nav.addEventListener('click',function(e){
     var b=e.target.closest('.pill'); if(!b)return;
     $$('.pill',nav).forEach(function(p){p.classList.remove('on')});
     b.classList.add('on');
-    var go=b.dataset.go;
-    if(go==='all'){window.scrollTo({top:0,behavior:'smooth'});return;}
-    var el=document.getElementById(go);
-    if(el){ el.classList.remove('shut'); setTimeout(function(){el.scrollIntoView({block:'start'})},60); }
+    goToSection(b.dataset.go);
   });
 
   /* filters */
@@ -250,6 +252,7 @@
       en.forEach(function(x){
         if(!x.isIntersecting)return;
         $$('.pill',nav).forEach(function(p){ p.classList.toggle('on',p.dataset.go===x.target.id) });
+        $$('.tlchip').forEach(function(c){ c.classList.toggle('on',c.dataset.go===x.target.id) });
       });
     },{rootMargin:'-160px 0px -65% 0px'});
     days.forEach(function(d){io.observe(d)});
@@ -286,23 +289,6 @@
     });
   }
 
-  /* ---- מצב כהה ---- */
-  (function(){
-    var KEY='bcn26_theme', btn=$('#themeBtn'); if(!btn) return;
-    var saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
-    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var dark = saved ? saved==='dark' : prefersDark;
-    function apply(){
-      document.documentElement.setAttribute('data-theme', dark?'dark':'light');
-      btn.textContent = dark ? '☀️' : '🌙';
-    }
-    apply();
-    btn.addEventListener('click',function(){
-      dark=!dark; apply();
-      try{ localStorage.setItem(KEY, dark?'dark':'light'); }catch(e){}
-    });
-  })();
-
   /* ---- עוד כמה ימים לטיול / ימים שעברו ---- */
   (function(){
     var el=$('#countdown'); if(!el) return;
@@ -324,6 +310,33 @@
     });
   })();
 
+  /* ---- רצועת "המסלול במבט אחד" ---- */
+  (function(){
+    var host=$('#tlstrip'); if(!host || !days.length) return;
+    days.forEach(function(d){
+      var num=$('.dnum',d), h3=$('h3',d), gist=$('.gist span',d);
+      if(!num || !h3) return;
+      var dateParts=(d.dataset.date||'').split('-'); // ["2026","08","26"]
+      var shortDate = dateParts.length===3 ? (+dateParts[2])+'.'+(+dateParts[1]) : '';
+      var tag = d.style.getPropertyValue('--tag') || 'var(--sea)';
+      var chip=document.createElement('button');
+      chip.type='button';
+      chip.className='tlchip'+(d.classList.contains('today')?' today':'')+(d.classList.contains('past')?' past':'');
+      chip.dataset.go=d.id;
+      chip.style.setProperty('--tag', tag);
+      var numEl=document.createElement('span'); numEl.className='tlnum'; numEl.textContent=num.textContent;
+      var dateEl=document.createElement('span'); dateEl.className='tldate'; dateEl.textContent=shortDate;
+      var lblEl=document.createElement('span'); lblEl.className='tllbl'; lblEl.textContent=gist?gist.textContent:h3.textContent;
+      chip.appendChild(numEl); chip.appendChild(dateEl); chip.appendChild(lblEl);
+      host.appendChild(chip);
+    });
+    host.addEventListener('click',function(e){
+      var b=e.target.closest('.tlchip'); if(!b) return;
+      $$('.pill',nav).forEach(function(p){ p.classList.toggle('on', p.dataset.go===b.dataset.go); });
+      goToSection(b.dataset.go);
+    });
+  })();
+
   /* ---- מזהה יציב לכל בולט במסלול המקורי + כפתור עריכה, לטובת js/shared.js (עריכה חיה) ---- */
   (function(){
     days.forEach(function(d){
@@ -334,7 +347,7 @@
         if(!ico || $('.edrow',ico)) return;
         var b=document.createElement('button');
         b.type='button'; b.className='ib edrow'; b.dataset.editfor=it.dataset.eid;
-        b.innerHTML='<span>✏️ עריכה</span>';
+        b.innerHTML='<svg class="i"><use href="#i-edit"/></svg><span>עריכה</span>';
         ico.appendChild(b);
       });
     });
