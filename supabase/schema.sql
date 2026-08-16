@@ -30,3 +30,28 @@ create policy "authenticated users can delete items"
 
 -- מאפשר real-time sync (INSERT/DELETE) לכל הצופים
 alter publication supabase_realtime add table public.items;
+
+-- צ'קליסט "מה להזמין" (t1..t16) משותף לכולם: מי שמסמן, מסומן אצל כולם.
+-- (רשימת האריזה p1..p8 נשארת אישית בכוונה — כל אחד אורז את התיק של עצמו —
+-- ולכן ממשיכה להישמר רק ב-localStorage בקובץ app.js, בלי טבלה כאן.)
+create table if not exists public.checklist (
+  task_id text primary key check (task_id ~ '^t[0-9]+$'),
+  checked boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.checklist enable row level security;
+
+create policy "checklist is publicly readable"
+  on public.checklist for select
+  using (true);
+
+create policy "authenticated users can insert checklist rows"
+  on public.checklist for insert
+  with check (auth.uid() is not null);
+
+create policy "authenticated users can update checklist rows"
+  on public.checklist for update
+  using (auth.uid() is not null);
+
+alter publication supabase_realtime add table public.checklist;

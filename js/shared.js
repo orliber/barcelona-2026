@@ -431,6 +431,72 @@ function rowToDocSnap(row){
   };
 }
 
+/*
+  צ'קליסט "מה להזמין" (t1..t16): במקור נשמר רק ב-localStorage (app.js), כלומר כל מכשיר
+  לבד. השכבה הזו מוסיפה סנכרון אמיתי — מי שמסמן, מסומן אצל כולם. app.js ממשיך לרוץ
+  בדיוק כפי שהיה (עדיין שומר localStorage כגיבוי אופליין); זו תוספת, לא תחליף.
+  רשימת האריזה (p1..p8) בכוונה לא כאן — היא אישית לכל אחד, לא משותפת.
+*/
+function bootChecklist(supabase){
+  var taskIds = Array.prototype.slice.call(document.querySelectorAll('.task input'))
+    .map(function(b){ return b.id; })
+    .filter(function(id){ return /^t\d+$/.test(id); });
+  if (!taskIds.length) return;
+
+  function refreshProgress(){
+    var boxes = taskIds.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+    var done = boxes.filter(function(b){ return b.checked; }).length;
+    var pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+    var pbar = document.getElementById('pbar'), pnum = document.getElementById('pnum'), ptxt = document.getElementById('ptxt');
+    if (pbar) pbar.style.width = pct + '%';
+    if (pnum) pnum.textContent = done + '/' + boxes.length;
+    if (ptxt) ptxt.textContent = done === 0 ? 'מסמנים תוך כדי' : done === boxes.length ? 'הכל סגור' : pct + '% הושלם';
+  }
+
+  function applyRemote(taskId, checked){
+    var box = document.getElementById(taskId);
+    if (!box || box.checked === checked) return;
+    box.checked = checked;
+    var task = box.closest('.task');
+    if (task) task.classList.toggle('done', checked);
+  }
+
+  supabase.from('checklist').select('*').then(function(res){
+    if (res.error){ console.error('[shared.js] checklist fetch failed', res.error); return; }
+    res.data.forEach(function(row){ applyRemote(row.task_id, row.checked); });
+    refreshProgress();
+  });
+
+  supabase.channel('checklist-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist' }, function(payload){
+      if (payload.new && payload.new.task_id){
+        applyRemote(payload.new.task_id, payload.new.checked);
+        refreshProgress();
+      }
+    })
+    .subscribe();
+
+  taskIds.forEach(function(id){
+    var box = document.getElementById(id);
+    if (!box) return;
+    box.addEventListener('change', function(){
+      supabase.from('checklist').upsert({ task_id: id, checked: box.checked, updated_at: new Date().toISOString() }).then(function(res){
+        if (res.error) console.error('[shared.js] checklist upsert failed', res.error);
+      });
+    });
+  });
+
+  var rst = document.getElementById('rst');
+  if (rst){
+    rst.addEventListener('click', function(){
+      var rows = taskIds.map(function(id){ return { task_id: id, checked: false, updated_at: new Date().toISOString() }; });
+      supabase.from('checklist').upsert(rows).then(function(res){
+        if (res.error) console.error('[shared.js] checklist reset failed', res.error);
+      });
+    });
+  }
+}
+
 function boot(){
   var configured = !!(supabaseConfig && supabaseConfig.url && supabaseConfig.anonKey);
   if (!configured){
@@ -444,6 +510,8 @@ function boot(){
     supabase.auth.signInAnonymously().then(function(res){
       if (res.error) console.error('[shared.js] anonymous sign-in failed — deleting items will not work until it is enabled in the Supabase console', res.error);
     });
+
+    bootChecklist(supabase);
 
     function onDelete(id){
       supabase.from('items').delete().eq('id', id).then(function(res){
