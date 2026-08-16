@@ -1,15 +1,11 @@
-// Supabase Edge Function: מנקה/מארגנת קלט חופשי שמישהו הקליד (הזמנה, כרטיסים, ואן וכו')
-// באמצעות Claude, ואז שומרת את הגרסה המסודרת בטבלה. זו הדרך היחידה לכתוב לטבלה —
-// אין policy של insert עבור אנשים אנונימיים ב-RLS, כדי שמפתח ה-API לא יהיה חשוף בדפדפן.
-//
-// פריסה: supabase functions deploy add-item
-// סוד: supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-// (SUPABASE_URL ו-SUPABASE_SERVICE_ROLE_KEY זמינים אוטומטית לכל Edge Function)
+// Supabase Edge Function: כמו add-item, אבל מעדכנת שורה קיימת (לפי id) במקום ליצור חדשה.
+// זו הדרך היחידה לערוך פריט — אין policy לעדכון ישיר על הטבלה.
 
 import Anthropic from "npm:@anthropic-ai/sdk@0.68.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders, jsonResponse, getCallerUserId, checkRateLimit } from "../_shared/guard.ts";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_PER_HOUR = 40;
 
 const TYPES = ["hotel", "transport", "tickets", "activity", "note"];
@@ -23,22 +19,20 @@ const DAYS = [
   { id: "d7", date: "2026-09-01", label: "יום 7 · 1 בספט׳ · אאוטלט וחזרה" },
   { id: "general", date: "", label: "כללי — לא קשור ליום ספציפי (למשל ביטוח, ואן לכל הטיול)" },
 ];
+const DAY_IDS = DAYS.map((d) => d.id);
 
 const SYSTEM_PROMPT =
-  "אתם מסדרים פריט אחד שמישהו הוסיף לתוכנייה משותפת של טיול משפחתי בקוסטה בראווה וברצלונה, 26.8-2.9.2026.\n" +
-  "קיבלתם קלט חופשי וקצת מבולגן (לפעמים מועתק מהזמנה אמיתית). המשימה שלכם: לנקות ולסדר אותו כדי שיתאים בול לסגנון של שאר האתר — תמציתי, ברור, בעברית.\n\n" +
+  "מישהו בקבוצה עורך פריט קיים בתוכנייה משותפת של טיול משפחתי בקוסטה בראווה וברצלונה, 26.8-2.9.2026.\n" +
+  "קיבלתם את הגרסה המעודכנת של השדות (אחרי שהמשתמש ערך אותם). נקו וסדרו אותם כדי שיתאימו בול לסגנון של שאר האתר — תמציתי, ברור, בעברית.\n\n" +
   "ימי הטיול (לבחירת day):\n" +
   DAYS.map((d) => `${d.id}: ${d.label}${d.date ? " (" + d.date + ")" : ""}`).join("\n") +
   "\n\nכללים:\n" +
-  "- title: כותרת קצרה ונקייה. שמות מקומות/מלונות/מותגים (Petit Palace Museum וכו') נשארים כפי שהם, לא מתרגמים. מתקנים שגיאות כתיב ברורות.\n" +
-  "- day: אם יש בטקסט תאריך או רמז לתאריך, בחרו את היום המתאים ביותר מהרשימה למעלה גם אם זה סותר את הבחירה המקורית של מי שמילא את הטופס. אם אין רמז ברור, השאירו את היום שנבחר במקור.\n" +
-  "- dayEnd: אם זו הזמנת לינה/מלון עם תאריך צ'ק-אין וצ'ק-אאוט: day = היום התואם לצ'ק-אין, dayEnd = היום התואם ללילה האחרון (יום אחד לפני הצ'ק-אאוט). לדוגמה: צ'ק-אין 26.8, צ'ק-אאוט 28.8 → day=d1, dayEnd=d2. לפריט שרלוונטי ליום בודד (כרטיסים, פעילות, הערה), dayEnd זהה ל-day. אם day הוא general, dayEnd גם general.\n" +
-  "- type: הסוג המתאים ביותר מתוך hotel/transport/tickets/activity/note.\n" +
-  "- details: משפט אחד קצר ותכליתי (תאריכים, שעות, כמות, מיקום) — לא לחזור על הכותרת.\n" +
-  "- price: פורמט נקי כמו €240 אם יש מספר ומטבע ברור; אחרת השאירו כפי שהוא או ריק.\n" +
-  "אל תמציאו מידע שלא הופיע בקלט המקורי.";
-
-const DAY_IDS = DAYS.map((d) => d.id);
+  "- title: כותרת קצרה ונקייה. שמות מקומות/מלונות/מותגים נשארים כפי שהם, לא מתרגמים.\n" +
+  "- day/dayEnd: אם זו הזמנת לינה עם צ'ק-אין וצ'ק-אאוט: day=יום הצ'ק-אין, dayEnd=יום הלילה האחרון (יום לפני הצ'ק-אאוט). לדוגמה 26.8-28.8 → day=d1, dayEnd=d2. לפריט של יום בודד, dayEnd זהה ל-day. אם day הוא general, dayEnd גם general.\n" +
+  "- type: hotel/transport/tickets/activity/note — הכי מתאים.\n" +
+  "- details: משפט אחד קצר ותכליתי — לא לחזור על הכותרת.\n" +
+  "- price: פורמט נקי כמו €240 אם יש מספר ומטבע ברור.\n" +
+  "אל תמציאו מידע שלא הופיע בקלט.";
 
 const OUTPUT_SCHEMA = {
   type: "object",
@@ -59,12 +53,8 @@ function clip(s: unknown, max: number): string {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders() });
-  }
-  if (req.method !== "POST") {
-    return jsonResponse({ error: "method not allowed" }, 405);
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders() });
+  if (req.method !== "POST") return jsonResponse({ error: "method not allowed" }, 405);
 
   let body: Record<string, unknown>;
   try {
@@ -73,29 +63,25 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "invalid json" }, 400);
   }
 
+  const id = String(body.id || "");
+  if (!UUID_RE.test(id)) return jsonResponse({ error: "invalid id" }, 400);
+
   const rawTitle = clip(body.title, 120);
-  if (!rawTitle) {
-    return jsonResponse({ error: "title is required" }, 400);
-  }
+  if (!rawTitle) return jsonResponse({ error: "title is required" }, 400);
+
   const addedBy = clip(body.addedBy, 40);
-  if (!addedBy) {
-    return jsonResponse({ error: "addedBy is required" }, 400);
-  }
+  if (!addedBy) return jsonResponse({ error: "addedBy is required" }, 400);
 
   const userId = await getCallerUserId(req);
-  if (!userId) {
-    return jsonResponse({ error: "authentication required" }, 401);
-  }
+  if (!userId) return jsonResponse({ error: "authentication required" }, 401);
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  const allowed = await checkRateLimit(supabase, userId, "add-item", MAX_PER_HOUR);
-  if (!allowed) {
-    return jsonResponse({ error: "rate limit exceeded, try again later" }, 429);
-  }
+  const allowed = await checkRateLimit(supabase, userId, "update-item", MAX_PER_HOUR);
+  if (!allowed) return jsonResponse({ error: "rate limit exceeded, try again later" }, 429);
 
   const rawType = TYPES.includes(String(body.type)) ? String(body.type) : "note";
   const rawDay = DAY_IDS.includes(String(body.day)) ? String(body.day) : "general";
@@ -140,12 +126,12 @@ Deno.serve(async (req) => {
       }
     }
   } catch (err) {
-    console.error("[add-item] Claude formatting failed, using raw input", err);
+    console.error("[update-item] Claude formatting failed, using raw input", err);
   }
 
   const { data, error } = await supabase
     .from("items")
-    .insert({
+    .update({
       type: cleaned.type,
       title: cleaned.title,
       day: cleaned.day,
@@ -153,13 +139,14 @@ Deno.serve(async (req) => {
       details: cleaned.details,
       price: cleaned.price,
       link: link || null,
-      added_by: addedBy || null,
+      added_by: addedBy,
     })
+    .eq("id", id)
     .select()
     .single();
 
   if (error) {
-    console.error("[add-item] insert failed", error);
+    console.error("[update-item] update failed", error);
     return jsonResponse({ error: "save failed" }, 500);
   }
 

@@ -3,15 +3,12 @@
 // זה רק "חילוץ"; ההוספה בפועל עוברת דרך add-item הרגיל אחרי שהמשתמש מאשר את הטופס.
 
 import Anthropic from "npm:@anthropic-ai/sdk@0.68.0";
-
-const CORS_HEADERS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, apikey, authorization, x-client-info",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders, jsonResponse, getCallerUserId, checkRateLimit } from "../_shared/guard.ts";
 
 const MAX_BYTES = 6 * 1024 * 1024;
 const ALLOWED_MEDIA = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
+const MAX_PER_HOUR = 15; // חילוץ מתמונה יקר יותר (vision) מהוספה רגילה — מגבלה נמוכה יותר
 
 const TYPES = ["hotel", "transport", "tickets", "activity", "note"];
 const DAYS = [
@@ -57,38 +54,41 @@ const OUTPUT_SCHEMA = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: CORS_HEADERS });
+    return new Response(null, { headers: corsHeaders() });
   }
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "method not allowed" }), {
-      status: 405,
-      headers: { ...CORS_HEADERS, "content-type": "application/json" },
-    });
+    return jsonResponse({ error: "method not allowed" }, 405);
   }
 
   let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "invalid json" }), {
-      status: 400,
-      headers: { ...CORS_HEADERS, "content-type": "application/json" },
-    });
+    return jsonResponse({ error: "invalid json" }, 400);
   }
 
   const mediaType = String(body.mediaType || "");
   const data = String(body.data || "");
   if (!ALLOWED_MEDIA.includes(mediaType)) {
-    return new Response(JSON.stringify({ error: "unsupported file type" }), {
-      status: 400,
-      headers: { ...CORS_HEADERS, "content-type": "application/json" },
-    });
+    return jsonResponse({ error: "unsupported file type" }, 400);
   }
   if (!data || data.length > MAX_BYTES * 1.4) {
-    return new Response(JSON.stringify({ error: "file too large" }), {
-      status: 400,
-      headers: { ...CORS_HEADERS, "content-type": "application/json" },
-    });
+    return jsonResponse({ error: "file too large" }, 400);
+  }
+
+  const userId = await getCallerUserId(req);
+  if (!userId) {
+    return jsonResponse({ error: "authentication required" }, 401);
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  const allowed = await checkRateLimit(supabase, userId, "extract-item", MAX_PER_HOUR);
+  if (!allowed) {
+    return jsonResponse({ error: "rate limit exceeded, try again later" }, 429);
   }
 
   const isPdf = mediaType === "application/pdf";
@@ -117,18 +117,12 @@ Deno.serve(async (req) => {
     });
 
     if (response.stop_reason === "refusal") {
-      return new Response(JSON.stringify({ error: "extraction refused" }), {
-        status: 422,
-        headers: { ...CORS_HEADERS, "content-type": "application/json" },
-      });
+      return jsonResponse({ error: "extraction refused" }, 422);
     }
 
     const textBlock = response.content.find((b) => b.type === "text");
     if (!textBlock || !("text" in textBlock)) {
-      return new Response(JSON.stringify({ error: "no output" }), {
-        status: 500,
-        headers: { ...CORS_HEADERS, "content-type": "application/json" },
-      });
+      return jsonResponse({ error: "no output" }, 500);
     }
     const parsed = JSON.parse(textBlock.text);
     const day = DAY_IDS.includes(parsed.day) ? parsed.day : "general";
@@ -141,15 +135,9 @@ Deno.serve(async (req) => {
       price: String(parsed.price || "").slice(0, 40),
     };
 
-    return new Response(JSON.stringify({ item: result }), {
-      status: 200,
-      headers: { ...CORS_HEADERS, "content-type": "application/json" },
-    });
+    return jsonResponse({ item: result }, 200);
   } catch (err) {
     console.error("[extract-item] Claude extraction failed", err);
-    return new Response(JSON.stringify({ error: "extraction failed" }), {
-      status: 502,
-      headers: { ...CORS_HEADERS, "content-type": "application/json" },
-    });
+    return jsonResponse({ error: "extraction failed" }, 502);
   }
 });

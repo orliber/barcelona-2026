@@ -20,15 +20,14 @@ create policy "items are publicly readable"
   on public.items for select
   using (true);
 
--- אף אחד לא כותב ישירות מהדפדפן — הכתיבה היחידה היא דרך ה-Edge Function
--- (שמשתמש במפתח service_role ועוקף RLS). אין כאן policy ל-insert בכוונה.
+-- אף אחד לא כותב/מוחק/מעדכן ישירות מהדפדפן — insert/delete/update עוברים דרך
+-- Edge Functions (add-item, delete-item, update-item) שמשתמשות במפתח service_role
+-- ועוקפות RLS. בכוונה אין כאן שום policy לכתיבה: PostgreSQL ללא policy = חסום.
+-- (בעבר הייתה כאן policy למחיקה ישירה "auth.uid() is not null" בלי סינון שורה —
+-- זה איפשר בקשת DELETE אחת בלי WHERE למחוק את *כל* הטבלה בבת אחת. delete-item
+-- סוגר את זה: תמיד מוחקת שורה בודדת לפי id, אין דרך למחיקה גורפת מבחוץ.)
 
--- מחיקה מותרת לכל מי שמחובר (כולל anonymous auth) — כדי שכל אחד יוכל להסיר פריט
-create policy "authenticated users can delete items"
-  on public.items for delete
-  using (auth.uid() is not null);
-
--- מאפשר real-time sync (INSERT/DELETE) לכל הצופים
+-- מאפשר real-time sync (INSERT/UPDATE/DELETE) לכל הצופים
 alter publication supabase_realtime add table public.items;
 
 -- צ'קליסט "מה להזמין" (t1..t16) משותף לכולם: מי שמסמן, מסומן אצל כולם.
@@ -55,3 +54,14 @@ create policy "authenticated users can update checklist rows"
   using (auth.uid() is not null);
 
 alter publication supabase_realtime add table public.checklist;
+
+-- מונה קצב לפונקציות שקוראות ל-Claude (add-item/extract-item/update-item), כדי שאף
+-- אחד לא יוכל להריץ עליהן לולאה ולנפח את חשבון ה-API. RLS מופעל ובכוונה בלי אף policy —
+-- הטבלה נגישה רק ל-service_role (בתוך ה-Edge Functions), אף פעם לא ישירות מהדפדפן.
+create table if not exists public.rate_limits (
+  bucket_key text primary key,
+  count int not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.rate_limits enable row level security;

@@ -2,6 +2,7 @@ import { supabaseConfig } from './supabase-config.js';
 
 var SUPABASE_SDK = 'https://esm.sh/@supabase/supabase-js@2';
 var NAME_KEY = 'bcn26_name';
+var NEW_BADGE_MS = 20 * 60 * 60 * 1000; // "חדש" מוצג על פריטים שנוספו ב-20 השעות האחרונות
 
 var DAYS = [
   { id: 'd1', date: '2026-08-26', label: 'יום 1 · 26 באוג׳ · נחיתה' },
@@ -92,6 +93,13 @@ function buildItemCard(docSnap){
   row.querySelector('.ttl').textContent = it.title || '';
   row.querySelector('.tm i').textContent = it.addedBy || '?';
 
+  if (it.createdAt && (Date.now() - new Date(it.createdAt).getTime()) < NEW_BADGE_MS){
+    var badge = document.createElement('span');
+    badge.className = 'newbadge';
+    badge.textContent = 'חדש';
+    row.querySelector('.ttl').appendChild(badge);
+  }
+
   var wt = document.createElement('div');
   wt.className = 'wt';
 
@@ -117,6 +125,12 @@ function buildItemCard(docSnap){
     a.innerHTML = '<svg class="i"><use href="#i-globe"/></svg><span>קישור</span>';
     ico.appendChild(a);
   }
+  var editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.className = 'ib ed';
+  editBtn.innerHTML = '<span>✏️ עריכה</span>';
+  ico.appendChild(editBtn);
+
   var delBtn = document.createElement('button');
   delBtn.type = 'button';
   delBtn.className = 'ib rm';
@@ -132,7 +146,7 @@ function buildItemCard(docSnap){
   card.appendChild(row);
   card.appendChild(wt);
 
-  return { card: card, delBtn: delBtn };
+  return { card: card, delBtn: delBtn, editBtn: editBtn };
 }
 
 function clearGenerated(){
@@ -141,7 +155,7 @@ function clearGenerated(){
   });
 }
 
-function render(docs, onDelete){
+function render(docs, onDelete, onEdit){
   clearGenerated();
 
   var groupList = document.getElementById('groupList');
@@ -149,20 +163,37 @@ function render(docs, onDelete){
   var gcount = document.getElementById('gcount');
 
   if (gcount) gcount.textContent = docs.length ? (docs.length + ' פריטים') : '';
-  if (groupEmpty) groupEmpty.style.display = docs.length ? 'none' : '';
+  if (groupEmpty){
+    if (docs.length === 0){
+      groupEmpty.textContent = 'עדיין לא נוסף כלום. תהיו הראשונים.';
+      groupEmpty.style.display = '';
+    } else {
+      groupEmpty.style.display = 'none';
+    }
+  }
 
-  function wireDelete(built, docSnap){
+  function wireActions(built, docSnap){
     built.delBtn.addEventListener('click', function(e){
       e.stopPropagation();
-      if (confirm('להסיר את "' + docSnap.data().title + '"?')) onDelete(docSnap.id);
+      var it = docSnap.data();
+      var spansMultiple = dayRange(it.day, it.dayEnd).length > 1;
+      var msg = 'להסיר את "' + it.title + '"?' +
+        (spansMultiple ? ' (הפריט יוסר מכל הימים שהוא מופיע בהם — ' + dayRangeLabel(it.day, it.dayEnd) + ')' : '');
+      if (confirm(msg)) onDelete(docSnap.id);
     });
+    if (built.editBtn){
+      built.editBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if (onEdit) onEdit(docSnap);
+      });
+    }
   }
 
   var byDay = {};
   docs.forEach(function(docSnap){
     if (groupList){
       var built = buildItemCard(docSnap);
-      wireDelete(built, docSnap);
+      wireActions(built, docSnap);
       groupList.appendChild(built.card);
     }
     var it = docSnap.data();
@@ -179,7 +210,7 @@ function render(docs, onDelete){
     if (!dbody) return;
     byDay[dayId].forEach(function(docSnap){
       var built = buildItemCard(docSnap);
-      wireDelete(built, docSnap);
+      wireActions(built, docSnap);
       dbody.appendChild(built.card);
     });
   });
@@ -189,8 +220,11 @@ function render(docs, onDelete){
   זרימת הוספה: העלאת תמונה/PDF היא הדרך הראשית — ה-AI מזהה סוג/יום/מחיר לבד מהמסמך.
   מילוי ידני (בלי קובץ) מוגבל בכוונה לפעילות/הערה בלבד — אלה הדברים שבדרך כלל אין
   עליהם מסמך אמיתי (למלון/תחבורה/כרטיסים יש כמעט תמיד אישור הזמנה, אז עדיף להעלות אותו).
+  אותה פונקציה גם משמשת לעריכה (editItem לא ריק) — אז מדלגים על ההעלאה ופותחים ישר
+  עם הערכים הקיימים ממולאים.
 */
-function buildModal(onSubmit, onExtract){
+function buildModal(onSubmit, onExtract, editItem){
+  var isEdit = !!editItem;
   var bg = document.createElement('div');
   bg.className = 'modal-bg';
   bg.id = 'gmodalBg';
@@ -199,7 +233,8 @@ function buildModal(onSubmit, onExtract){
     return '<option value="' + d.id + '">' + esc(d.label) + '</option>';
   }).join('');
 
-  var uploadHtml = onExtract
+  var showUpload = onExtract && !isEdit;
+  var uploadHtml = showUpload
     ? '<div class="field"><label>העלאת תמונה או PDF של ההזמנה</label>' +
       '<input type="file" id="gfileInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf">' +
       '<div id="gfileStatus" class="gfilestatus">ה-AI יזהה לבד את הסוג, היום, ופרטי המחיר.</div></div>' +
@@ -207,10 +242,10 @@ function buildModal(onSubmit, onExtract){
     : '';
 
   bg.innerHTML =
-    '<div class="modal" role="dialog" aria-modal="true" aria-label="הוספת הזמנה">' +
-      '<h3>הוספת הזמנה</h3>' +
+    '<div class="modal" role="dialog" aria-modal="true" aria-label="' + (isEdit ? 'עריכת פריט' : 'הוספת הזמנה') + '">' +
+      '<h3>' + (isEdit ? 'עריכת פריט' : 'הוספת הזמנה') + '</h3>' +
       uploadHtml +
-      '<div id="gfields" style="display:' + (onExtract ? 'none' : 'block') + '">' +
+      '<div id="gfields" style="display:' + (showUpload ? 'none' : 'block') + '">' +
         '<div class="field"><label>סוג</label><div class="typegrid" id="gtype"></div></div>' +
         '<div class="field"><label>כותרת</label><input id="gtitle" maxlength="120" placeholder="למשל: מלון Petit Palace Museum"></div>' +
         '<div class="field"><label>יום</label><select id="gday">' + dayOptions + '</select></div>' +
@@ -222,7 +257,7 @@ function buildModal(onSubmit, onExtract){
       '<div class="gerr" id="gerr"></div>' +
       '<div class="modal-actions">' +
         '<button type="button" class="btn-cancel" id="gcancel">ביטול</button>' +
-        '<button type="button" class="btn-save" id="gsave">הוספה</button>' +
+        '<button type="button" class="btn-save" id="gsave">' + (isEdit ? 'שמירת שינויים' : 'הוספה') + '</button>' +
       '</div>' +
     '</div>';
 
@@ -246,9 +281,12 @@ function buildModal(onSubmit, onExtract){
   }
 
   var MANUAL_TYPES = TYPES.filter(function(t){ return t.id === 'activity' || t.id === 'note'; });
-  if (!onExtract) renderTypeButtons(TYPES, TYPES[0].id);
+  if (!showUpload) renderTypeButtons(TYPES, isEdit ? editItem.type : TYPES[0].id);
 
-  function close(){ bg.classList.remove('show'); }
+  function close(){
+    bg.classList.remove('show');
+    if (isEdit) setTimeout(function(){ bg.remove(); }, 250);
+  }
   bg.addEventListener('click', function(e){ if (e.target === bg) close(); });
   bg.querySelector('#gcancel').addEventListener('click', close);
 
@@ -287,7 +325,7 @@ function buildModal(onSubmit, onExtract){
           bg.querySelector('#gdetails').value = fields.details || '';
           bg.querySelector('#gprice').value = fields.price || '';
         }).catch(function(err){
-          statusEl.textContent = 'לא הצלחנו לחלץ מהקובץ הזה. אפשר להוסיף ידנית פעילות/הערה למעלה.';
+          statusEl.textContent = 'לא הצלחנו לחלץ מהקובץ הזה. אפשר להוסיף ידנית פעילות/הערה למעלה. (' + (err && err.message || '') + ')';
           console.error(err);
         });
       };
@@ -298,7 +336,15 @@ function buildModal(onSubmit, onExtract){
 
   var savedName = '';
   try { savedName = localStorage.getItem(NAME_KEY) || ''; } catch(e){}
-  bg.querySelector('#gname').value = savedName;
+  bg.querySelector('#gname').value = isEdit ? (editItem.addedBy || savedName) : savedName;
+
+  if (isEdit){
+    bg.querySelector('#gtitle').value = editItem.title || '';
+    bg.querySelector('#gday').value = editItem.day || 'general';
+    bg.querySelector('#gdetails').value = editItem.details || '';
+    bg.querySelector('#gprice').value = editItem.price || '';
+    bg.querySelector('#glink').value = editItem.link || '';
+  }
 
   bg.querySelector('#gsave').addEventListener('click', function(){
     var title = bg.querySelector('#gtitle').value.trim();
@@ -314,13 +360,27 @@ function buildModal(onSubmit, onExtract){
       errEl.classList.add('show');
       return;
     }
+
+    if (!isEdit){
+      var existingTitles = Array.prototype.slice.call(document.querySelectorAll('#groupList .ttl'))
+        .map(function(el){ return (el.textContent || '').trim().toLowerCase(); })
+        .filter(Boolean);
+      var titleLower = title.toLowerCase();
+      var looksDup = existingTitles.some(function(t){
+        return t === titleLower || t.indexOf(titleLower) > -1 || titleLower.indexOf(t) > -1;
+      });
+      if (looksDup && !confirm('נראה שכבר יש פריט דומה בשם "' + title + '" ברשימה. להוסיף בכל זאת?')){
+        return;
+      }
+    }
+
     errEl.classList.remove('show');
     try { localStorage.setItem(NAME_KEY, name); } catch(e){}
 
     var saveBtn = bg.querySelector('#gsave');
     saveBtn.disabled = true; saveBtn.textContent = 'שומר…';
 
-    onSubmit({
+    var payload = {
       type: selectedType,
       title: title,
       day: bg.querySelector('#gday').value,
@@ -328,22 +388,42 @@ function buildModal(onSubmit, onExtract){
       price: bg.querySelector('#gprice').value.trim(),
       link: bg.querySelector('#glink').value.trim(),
       addedBy: name
-    }).then(function(){
-      saveBtn.disabled = false; saveBtn.textContent = 'הוספה';
-      bg.querySelector('#gtitle').value = '';
-      bg.querySelector('#gdetails').value = '';
-      bg.querySelector('#gprice').value = '';
-      bg.querySelector('#glink').value = '';
+    };
+    if (isEdit) payload.id = editItem.id;
+
+    onSubmit(payload).then(function(){
+      saveBtn.disabled = false; saveBtn.textContent = isEdit ? 'שמירת שינויים' : 'הוספה';
+      if (!isEdit){
+        bg.querySelector('#gtitle').value = '';
+        bg.querySelector('#gdetails').value = '';
+        bg.querySelector('#gprice').value = '';
+        bg.querySelector('#glink').value = '';
+      }
       close();
     }).catch(function(err){
-      saveBtn.disabled = false; saveBtn.textContent = 'הוספה';
-      errEl.textContent = 'לא הצלחנו לשמור. נסו שוב עוד רגע.';
+      saveBtn.disabled = false; saveBtn.textContent = isEdit ? 'שמירת שינויים' : 'הוספה';
+      errEl.textContent = 'לא הצלחנו לשמור. נסו שוב עוד רגע. (' + (err && err.message || '') + ')';
       errEl.classList.add('show');
       console.error(err);
     });
   });
 
   return bg;
+}
+
+function openEditModal(docSnap, onUpdate){
+  var it = docSnap.data();
+  var modal = buildModal(onUpdate, null, {
+    id: docSnap.id,
+    type: it.type,
+    title: it.title,
+    day: it.day,
+    details: it.details,
+    price: it.price,
+    link: it.link,
+    addedBy: it.addedBy
+  });
+  modal.classList.add('show');
 }
 
 function mountAddUi(modal){
@@ -363,9 +443,9 @@ function mountAddUi(modal){
 
 /*
   מצב תצוגה מקדימה: פועל רק כשעדיין לא מולא js/supabase-config.js.
-  אותה חוויה בדיוק (אותו modal, אותם כרטיסים) אבל הנתונים נשמרים רק בדפדפן הזה —
-  לצורך התרשמות לפני שמחברים את Supabase האמיתי. ברגע שיהיה config אמיתי, מסלול הקוד
-  הזה כבר לא ירוץ.
+  אותה חוויה בדיוק (אותו modal, אותם כרטיסים, כולל עריכה) אבל הנתונים נשמרים רק בדפדפן
+  הזה — לצורך התרשמות לפני שמחברים את Supabase האמיתי. ברגע שיהיה config אמיתי, מסלול
+  הקוד הזה כבר לא ירוץ.
 */
 function bootDemo(){
   var KEY = 'bcn26_demo_items';
@@ -381,20 +461,33 @@ function bootDemo(){
     listeners.forEach(function(fn){ fn(snap); });
   }
 
-  listeners.push(function(snap){ render(snap, removeDemoItem); });
+  function onEdit(docSnap){ openEditModal(docSnap, editDemoItem); }
+  listeners.push(function(snap){ render(snap, removeDemoItem, onEdit); });
   notify();
 
   function removeDemoItem(id){
     items = items.filter(function(it){ return it.id !== id; });
     persist(); notify();
+    return Promise.resolve();
   }
 
   function submitDemoItem(data){
-    data = { type: data.type, title: data.title, day: data.day, details: data.details,
+    data = { type: data.type, title: data.title, day: data.day, dayEnd: data.day, details: data.details,
       price: data.price, link: data.link, addedBy: data.addedBy,
       id: 'demo-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
       createdAt: Date.now() };
     items.push(data);
+    persist(); notify();
+    return Promise.resolve();
+  }
+
+  function editDemoItem(data){
+    var idx = items.findIndex(function(it){ return it.id === data.id; });
+    if (idx === -1) return Promise.resolve();
+    items[idx] = Object.assign({}, items[idx], {
+      type: data.type, title: data.title, day: data.day, dayEnd: data.day,
+      details: data.details, price: data.price, link: data.link, addedBy: data.addedBy
+    });
     persist(); notify();
     return Promise.resolve();
   }
@@ -425,7 +518,8 @@ function rowToDocSnap(row){
         details: row.details,
         price: row.price,
         link: row.link,
-        addedBy: row.added_by
+        addedBy: row.added_by,
+        createdAt: row.created_at
       };
     }
   };
@@ -480,8 +574,17 @@ function bootChecklist(supabase){
     var box = document.getElementById(id);
     if (!box) return;
     box.addEventListener('change', function(){
+      var prevChecked = !box.checked;
+      var wasDone = prevChecked;
       supabase.from('checklist').upsert({ task_id: id, checked: box.checked, updated_at: new Date().toISOString() }).then(function(res){
-        if (res.error) console.error('[shared.js] checklist upsert failed', res.error);
+        if (res.error){
+          console.error('[shared.js] checklist upsert failed', res.error);
+          box.checked = prevChecked;
+          var task = box.closest('.task');
+          if (task) task.classList.toggle('done', wasDone);
+          refreshProgress();
+          alert('לא הצלחנו לשמור את הסימון. נסו שוב.');
+        }
       });
     });
   });
@@ -504,28 +607,58 @@ function boot(){
     return;
   }
 
+  var groupEmptyEl = document.getElementById('groupEmpty');
+  if (groupEmptyEl) groupEmptyEl.textContent = 'טוען…';
+
   import(SUPABASE_SDK).then(function(mod){
     var supabase = mod.createClient(supabaseConfig.url, supabaseConfig.anonKey);
 
     supabase.auth.signInAnonymously().then(function(res){
-      if (res.error) console.error('[shared.js] anonymous sign-in failed — deleting items will not work until it is enabled in the Supabase console', res.error);
+      if (res.error) console.error('[shared.js] anonymous sign-in failed — adding/deleting will not work until it is enabled in the Supabase console', res.error);
     });
 
     bootChecklist(supabase);
 
-    function onDelete(id){
-      supabase.from('items').delete().eq('id', id).then(function(res){
-        if (res.error){
-          console.error('[shared.js] delete failed', res.error);
-          alert('לא הצלחנו להסיר. נסו שוב.');
-        }
+    function getAuthToken(){
+      return supabase.auth.getSession().then(function(res){
+        var session = res.data && res.data.session;
+        return (session && session.access_token) || supabaseConfig.anonKey;
       });
     }
 
+    function callFunction(name, payload){
+      return getAuthToken().then(function(token){
+        return fetch(supabaseConfig.url + '/functions/v1/' + name, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'apikey': supabaseConfig.anonKey,
+            'authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(payload)
+        });
+      }).then(function(res){
+        return res.json().catch(function(){ return {}; }).then(function(json){
+          if (!res.ok) throw new Error((json && json.error) || (name + ' failed: ' + res.status));
+          return json;
+        });
+      });
+    }
+
+    function onDelete(id){
+      callFunction('delete-item', { id: id }).catch(function(err){
+        console.error('[shared.js] delete failed', err);
+        alert('לא הצלחנו להסיר. נסו שוב. (' + (err && err.message || '') + ')');
+      });
+    }
+
+    var refreshSeq = 0;
     function refresh(){
+      var mySeq = ++refreshSeq;
       supabase.from('items').select('*').order('created_at', { ascending: false }).then(function(res){
+        if (mySeq !== refreshSeq) return; // תגובה מיושנת שהוקדמה ע"י בקשה חדשה יותר — מתעלמים
         if (res.error){ console.error('[shared.js] fetch failed', res.error); return; }
-        render(res.data.map(rowToDocSnap), onDelete);
+        render(res.data.map(rowToDocSnap), onDelete, onEdit);
       });
     }
 
@@ -533,21 +666,6 @@ function boot(){
       .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, refresh)
       .subscribe();
     refresh();
-
-    function callFunction(name, payload){
-      return fetch(supabaseConfig.url + '/functions/v1/' + name, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'apikey': supabaseConfig.anonKey,
-          'authorization': 'Bearer ' + supabaseConfig.anonKey
-        },
-        body: JSON.stringify(payload)
-      }).then(function(res){
-        if (!res.ok) throw new Error(name + ' request failed: ' + res.status);
-        return res.json();
-      });
-    }
 
     function submitItem(data){
       return callFunction('add-item', data);
@@ -557,9 +675,18 @@ function boot(){
       return callFunction('extract-item', file).then(function(res){ return res.item; });
     }
 
+    function submitEdit(data){
+      return callFunction('update-item', data);
+    }
+
+    function onEdit(docSnap){
+      openEditModal(docSnap, submitEdit);
+    }
+
     mountAddUi(buildModal(submitItem, submitExtract));
   }).catch(function(err){
     console.error('[shared.js] failed to load Supabase SDK', err);
+    if (groupEmptyEl) groupEmptyEl.textContent = 'לא הצלחנו לטעון את התוכן המשותף. נסו לרענן את הדף.';
   });
 }
 
