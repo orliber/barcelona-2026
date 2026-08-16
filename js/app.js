@@ -285,4 +285,79 @@
       navigator.serviceWorker.register('sw.js').catch(function(){});
     });
   }
+
+  /* ---- מצב כהה ---- */
+  (function(){
+    var KEY='bcn26_theme', btn=$('#themeBtn'); if(!btn) return;
+    var saved=null; try{ saved=localStorage.getItem(KEY); }catch(e){}
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var dark = saved ? saved==='dark' : prefersDark;
+    function apply(){
+      document.documentElement.setAttribute('data-theme', dark?'dark':'light');
+      btn.textContent = dark ? '☀️' : '🌙';
+    }
+    apply();
+    btn.addEventListener('click',function(){
+      dark=!dark; apply();
+      try{ localStorage.setItem(KEY, dark?'dark':'light'); }catch(e){}
+    });
+  })();
+
+  /* ---- עוד כמה ימים לטיול / ימים שעברו ---- */
+  (function(){
+    var el=$('#countdown'); if(!el) return;
+    var start=new Date('2026-08-26T00:00:00'), end=new Date('2026-09-02T00:00:00');
+    var now=new Date();
+    var msPerDay=86400000;
+    if(now < start){
+      var n=Math.ceil((start-now)/msPerDay);
+      el.innerHTML = '<span>✈️</span><span>עוד <b>'+n+'</b> '+(n===1?'יום':'ימים')+' לטיול!</span>';
+    } else if(now >= start && now < end){
+      var dayNum=Math.min(7, Math.floor((now-start)/msPerDay)+1);
+      el.innerHTML = '<span>🌊</span><span>הטיול בעיצומו — <b>יום '+dayNum+'</b> מתוך 7</span>';
+    } else {
+      el.innerHTML = '<span>🧡</span><span>הטיול הסתיים — מקווים שהיה מדהים</span>';
+    }
+    days.forEach(function(d){
+      var dd=d.dataset.date; if(!dd) return;
+      if(new Date(dd+'T23:59:59') < now && !d.classList.contains('today')) d.classList.add('past');
+    });
+  })();
+
+  /* ---- מזהה יציב לכל בולט במסלול המקורי + כפתור עריכה, לטובת js/shared.js (עריכה חיה) ---- */
+  (function(){
+    days.forEach(function(d){
+      var items=$$('.item',d).filter(function(it){ return !it.classList.contains('group'); });
+      items.forEach(function(it,i){
+        it.dataset.eid = d.id+'-'+i;
+        var ico=$('.ico',it);
+        if(!ico || $('.edrow',ico)) return;
+        var b=document.createElement('button');
+        b.type='button'; b.className='ib edrow'; b.dataset.editfor=it.dataset.eid;
+        b.innerHTML='<span>✏️ עריכה</span>';
+        ico.appendChild(b);
+      });
+    });
+  })();
+
+  /* ---- צ'קבוקס "הזמנו מקום" + הצבעת "רוצים לנסות" על כל מסעדה ברשימה הראשית ---- */
+  (function(){
+    var sec=document.getElementById('eats'); if(!sec) return;
+    function slug(s){
+      return (s||'').toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'x';
+    }
+    $$('.eat',sec).forEach(function(card){
+      var name=$('.ename',card); if(!name) return;
+      var key='r_'+slug(name.textContent);
+      var body=$('.ebody',card); if(!body || $('.rsvbar',body)) return;
+      var bar=document.createElement('div');
+      bar.className='rsvbar';
+      bar.innerHTML =
+        '<div class="task"><input type="checkbox" id="'+key+'"><label for="'+key+'"><strong>הזמנו מקום ✓</strong></label></div>'+
+        '<button type="button" class="votebtn" data-rkey="'+slug(name.textContent)+'"><span class="vh">🤍</span><span class="vc">0</span></button>';
+      body.appendChild(bar);
+    });
+  })();
 })();

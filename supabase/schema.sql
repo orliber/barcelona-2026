@@ -30,11 +30,11 @@ create policy "items are publicly readable"
 -- מאפשר real-time sync (INSERT/UPDATE/DELETE) לכל הצופים
 alter publication supabase_realtime add table public.items;
 
--- צ'קליסט "מה להזמין" (t1..t16) משותף לכולם: מי שמסמן, מסומן אצל כולם.
--- (רשימת האריזה p1..p8 נשארת אישית בכוונה — כל אחד אורז את התיק של עצמו —
--- ולכן ממשיכה להישמר רק ב-localStorage בקובץ app.js, בלי טבלה כאן.)
+-- צ'קליסט "מה להזמין" (t1..t16) ו"הזמנו מקום" למסעדות (r_<slug>) משותפים לכולם:
+-- מי שמסמן, מסומן אצל כולם. (רשימת האריזה p1..p8 נשארת אישית בכוונה — כל אחד אורז
+-- את התיק של עצמו — ולכן ממשיכה להישמר רק ב-localStorage בקובץ app.js, בלי טבלה כאן.)
 create table if not exists public.checklist (
-  task_id text primary key check (task_id ~ '^t[0-9]+$'),
+  task_id text primary key check (task_id ~ '^(t[0-9]+|r_[a-z0-9_]+)$'),
   checked boolean not null default false,
   updated_at timestamptz not null default now()
 );
@@ -65,3 +65,59 @@ create table if not exists public.rate_limits (
 );
 
 alter table public.rate_limits enable row level security;
+
+-- הצבעות "רוצים לנסות" על מסעדות — אותה תבנית בדיוק כמו checklist (upsert לפי מפתח,
+-- בלי מחיקה ישירה מהדפדפן, בלי RLS פרוץ): מפתח = restaurant_key||'::'||voter_name,
+-- כדי שכל אחד יוכל להחליף/לבטל רק את ההצבעה שלו עצמו.
+create table if not exists public.restaurant_votes (
+  vote_key text primary key,
+  restaurant_key text not null check (char_length(restaurant_key) <= 60),
+  voter_name text not null check (char_length(voter_name) <= 40),
+  liked boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.restaurant_votes enable row level security;
+
+create policy "votes are publicly readable"
+  on public.restaurant_votes for select
+  using (true);
+
+create policy "authenticated users can insert votes"
+  on public.restaurant_votes for insert
+  with check (auth.uid() is not null);
+
+create policy "authenticated users can update votes"
+  on public.restaurant_votes for update
+  using (auth.uid() is not null);
+
+alter publication supabase_realtime add table public.restaurant_votes;
+
+-- עריכה חיה של כל בולט במסלול המקורי (לא רק פריטים שהקבוצה הוסיפה): אותה תבנית
+-- "upsert לפי מפתח, בלי מחיקה ישירה" כמו checklist/votes. edit_key נגזר ב-JS (app.js)
+-- מהיום ומהמיקום בתוך היום (למשל d1-0), ומופעל בזמן טעינה על גבי הטקסט המקורי.
+-- cleared=true פירושו "בטלו את השינוי, חזרו למקור" — בלי למחוק שורה מהטבלה.
+create table if not exists public.content_edits (
+  edit_key text primary key check (char_length(edit_key) <= 40),
+  title text check (char_length(title) <= 160),
+  what text check (char_length(what) <= 400),
+  cleared boolean not null default false,
+  updated_by text not null check (char_length(updated_by) <= 40),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.content_edits enable row level security;
+
+create policy "content edits are publicly readable"
+  on public.content_edits for select
+  using (true);
+
+create policy "authenticated users can insert content edits"
+  on public.content_edits for insert
+  with check (auth.uid() is not null);
+
+create policy "authenticated users can update content edits"
+  on public.content_edits for update
+  using (auth.uid() is not null);
+
+alter publication supabase_realtime add table public.content_edits;

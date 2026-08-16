@@ -534,11 +534,15 @@ function rowToDocSnap(row){
 function bootChecklist(supabase){
   var taskIds = Array.prototype.slice.call(document.querySelectorAll('.task input'))
     .map(function(b){ return b.id; })
-    .filter(function(id){ return /^t\d+$/.test(id); });
+    .filter(function(id){ return /^(t\d+|r_[a-z0-9_]+)$/.test(id); });
   if (!taskIds.length) return;
 
+  // בר ההתקדמות שייך רק ל"מה להזמין" (t1..t16) — "הזמנו מקום" במסעדות מסונכרן
+  // באותה טבלה ובאותו מנגנון בדיוק, אבל לא נספר באחוזים של אותו בר.
+  var bookingIds = taskIds.filter(function(id){ return /^t\d+$/.test(id); });
+
   function refreshProgress(){
-    var boxes = taskIds.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+    var boxes = bookingIds.map(function(id){ return document.getElementById(id); }).filter(Boolean);
     var done = boxes.filter(function(b){ return b.checked; }).length;
     var pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
     var pbar = document.getElementById('pbar'), pnum = document.getElementById('pnum'), ptxt = document.getElementById('ptxt');
@@ -600,6 +604,225 @@ function bootChecklist(supabase){
   }
 }
 
+/*
+  "רוצים לנסות" — הצבעת לב על מסעדות, כדי שהקבוצה תחליט ביחד לאיפה מתקשרים קודם.
+  אותה תבנית upsert-לפי-מפתח כמו הצ'קליסט: vote_key = restaurant_key + '::' + השם שלי,
+  כדי שכל אחד יוכל להחליף רק את ההצבעה של עצמו. אין מחיקה — ביטול הצבעה = liked:false.
+*/
+function bootVotes(supabase){
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('.votebtn'));
+  if (!buttons.length) return;
+
+  function myName(){
+    var n = ''; try { n = localStorage.getItem(NAME_KEY) || ''; } catch(e){}
+    if (!n){
+      n = (prompt('איך שתרצו שיראו אתכם (לצורך ההצבעה):') || '').trim();
+      if (n){ try { localStorage.setItem(NAME_KEY, n); } catch(e){} }
+    }
+    return n;
+  }
+
+  var state = {}; // restaurant_key -> { count, mine }
+
+  function render(){
+    buttons.forEach(function(btn){
+      var key = btn.dataset.rkey;
+      var s = state[key] || { count: 0, mine: false };
+      btn.querySelector('.vc').textContent = s.count;
+      btn.querySelector('.vh').textContent = s.mine ? '❤️' : '🤍';
+      btn.classList.toggle('on', s.mine);
+    });
+  }
+
+  function applyRows(rows){
+    state = {};
+    var name = null; try { name = localStorage.getItem(NAME_KEY); } catch(e){}
+    rows.forEach(function(row){
+      if (!row.liked) return;
+      state[row.restaurant_key] = state[row.restaurant_key] || { count: 0, mine: false };
+      state[row.restaurant_key].count++;
+      if (name && row.voter_name === name) state[row.restaurant_key].mine = true;
+    });
+    render();
+  }
+
+  supabase.from('restaurant_votes').select('*').then(function(res){
+    if (res.error){ console.error('[shared.js] votes fetch failed', res.error); return; }
+    applyRows(res.data);
+  });
+
+  supabase.channel('votes-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'restaurant_votes' }, function(){
+      supabase.from('restaurant_votes').select('*').then(function(res){
+        if (!res.error) applyRows(res.data);
+      });
+    })
+    .subscribe();
+
+  buttons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var key = btn.dataset.rkey;
+      var name = myName();
+      if (!name) return;
+      var wasMine = state[key] && state[key].mine;
+      var voteKey = key + '::' + name;
+      supabase.from('restaurant_votes').upsert({
+        vote_key: voteKey, restaurant_key: key, voter_name: name,
+        liked: !wasMine, updated_at: new Date().toISOString()
+      }).then(function(res){
+        if (res.error){ console.error('[shared.js] vote upsert failed', res.error); return; }
+        state[key] = state[key] || { count: 0, mine: false };
+        state[key].count += wasMine ? -1 : 1;
+        state[key].mine = !wasMine;
+        render();
+      });
+    });
+  });
+}
+
+/*
+  עריכה חיה של כל בולט במסלול המקורי (לא רק פריטים שהקבוצה הוסיפה) — app.js כבר סימן
+  כל .item עם data-eid יציב, והוסיף כפתור ✏️. כאן: שומרים "מקור" (הטקסט המקורי שנטען
+  מה-HTML) לכל eid לפני שמפעילים override כלשהו, כדי ש"שחזור למקור" תמיד יעבוד אצל כולם
+  בלי למחוק כלום מה-DB — כי ה-HTML המקורי זהה אצל כל הצופים.
+*/
+function bootContentEdits(supabase){
+  var eidEls = {};
+  Array.prototype.slice.call(document.querySelectorAll('.item[data-eid]')).forEach(function(el){
+    eidEls[el.dataset.eid] = el;
+  });
+  if (!Object.keys(eidEls).length) return;
+
+  var originals = {};
+  Object.keys(eidEls).forEach(function(eid){
+    var el = eidEls[eid];
+    var ttl = el.querySelector('.ttl'), what = el.querySelector('.what');
+    originals[eid] = { title: ttl ? ttl.textContent : '', what: what ? what.textContent : '' };
+  });
+
+  var active = {}; // eid -> row
+
+  function applyRow(row){
+    var el = eidEls[row.edit_key];
+    if (!el) return;
+    var ttl = el.querySelector('.ttl'), what = el.querySelector('.what');
+    // ttl.textContent תמיד מוחק גם ילדים קודמים (כולל תג "נערך" קודם) — לכן בונים
+    // מחדש את התג *אחרי* קביעת הטקסט, לא לפני, אחרת הוא נעלם עם כל עדכון חוזר.
+    if (row.cleared){
+      if (ttl) ttl.textContent = originals[row.edit_key].title;
+      if (what) what.textContent = originals[row.edit_key].what;
+      delete active[row.edit_key];
+      return;
+    }
+    if (ttl && row.title) ttl.textContent = row.title;
+    if (what && row.what) what.textContent = row.what;
+    active[row.edit_key] = row;
+    if (ttl){
+      var badge = document.createElement('span');
+      badge.className = 'editbadge';
+      badge.textContent = 'נערך ע״י ' + (row.updated_by || 'מישהו');
+      ttl.appendChild(badge);
+    }
+  }
+
+  supabase.from('content_edits').select('*').then(function(res){
+    if (res.error){ console.error('[shared.js] content_edits fetch failed', res.error); return; }
+    res.data.forEach(applyRow);
+  });
+
+  supabase.channel('content-edits-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'content_edits' }, function(payload){
+      if (payload.new && payload.new.edit_key) applyRow(payload.new);
+    })
+    .subscribe();
+
+  function openContentEditModal(eid){
+    var el = eidEls[eid]; if (!el) return;
+    var ttl = el.querySelector('.ttl'), what = el.querySelector('.what');
+    // לא קוראים textContent ישירות מ-.ttl — יש בו תג "נערך ע״י" כילד, וזה יתערבב
+    // עם הכותרת. משתמשים במקור השמור/בעריכה הפעילה, שהם תמיד הטקסט הנקי בלבד.
+    var cur = active[eid] || originals[eid];
+    var curTitle = cur ? cur.title : '';
+    var curWhat = cur ? cur.what : '';
+
+    var bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    var savedName = ''; try { savedName = localStorage.getItem(NAME_KEY) || ''; } catch(e){}
+    bg.innerHTML =
+      '<div class="modal" role="dialog" aria-modal="true" aria-label="עריכת פריט במסלול">' +
+        '<h3>עריכת פריט במסלול</h3>' +
+        '<div class="field"><label>כותרת</label><input id="ceTitle" maxlength="160"></div>' +
+        (what ? '<div class="field"><label>תיאור קצר</label><textarea id="ceWhat" maxlength="400"></textarea></div>' : '') +
+        '<div class="field"><label>השם שלכם (חובה)</label><input id="ceName" maxlength="40" placeholder="איך שתרצו שיראו אתכם"></div>' +
+        '<div class="gerr" id="ceErr"></div>' +
+        '<div class="modal-actions">' +
+          (active[eid] ? '<button type="button" class="btn-cancel" id="ceRestore">שחזור למקור</button>' : '') +
+          '<button type="button" class="btn-cancel" id="ceCancel">ביטול</button>' +
+          '<button type="button" class="btn-save" id="ceSave">שמירה</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(bg);
+    bg.querySelector('#ceTitle').value = curTitle;
+    var ceWhat = bg.querySelector('#ceWhat'); if (ceWhat) ceWhat.value = curWhat;
+    bg.querySelector('#ceName').value = savedName;
+
+    function close(){ bg.classList.remove('show'); setTimeout(function(){ bg.remove(); }, 250); }
+    bg.addEventListener('click', function(e){ if (e.target === bg) close(); });
+    bg.querySelector('#ceCancel').addEventListener('click', close);
+
+    var restoreBtn = bg.querySelector('#ceRestore');
+    if (restoreBtn){
+      restoreBtn.addEventListener('click', function(){
+        var name = bg.querySelector('#ceName').value.trim();
+        if (!name){
+          var errEl = bg.querySelector('#ceErr');
+          errEl.textContent = 'צריך למלא מי מבצע את השחזור.';
+          errEl.classList.add('show');
+          return;
+        }
+        supabase.from('content_edits').upsert({
+          edit_key: eid, cleared: true, updated_by: name, updated_at: new Date().toISOString()
+        }).then(function(res){
+          if (res.error){ console.error('[shared.js] restore failed', res.error); return; }
+          close();
+        });
+      });
+    }
+
+    bg.querySelector('#ceSave').addEventListener('click', function(){
+      var title = bg.querySelector('#ceTitle').value.trim();
+      var name = bg.querySelector('#ceName').value.trim();
+      var errEl = bg.querySelector('#ceErr');
+      if (!title){ errEl.textContent = 'צריך למלא כותרת.'; errEl.classList.add('show'); return; }
+      if (!name){ errEl.textContent = 'צריך למלא מי עורך — כדי שיהיה ברור לכולם.'; errEl.classList.add('show'); return; }
+      errEl.classList.remove('show');
+      try { localStorage.setItem(NAME_KEY, name); } catch(e){}
+      var saveBtn = bg.querySelector('#ceSave');
+      saveBtn.disabled = true; saveBtn.textContent = 'שומר…';
+      var payload = { edit_key: eid, title: title, cleared: false, updated_by: name, updated_at: new Date().toISOString() };
+      if (ceWhat) payload.what = ceWhat.value.trim();
+      supabase.from('content_edits').upsert(payload).then(function(res){
+        if (res.error){
+          saveBtn.disabled = false; saveBtn.textContent = 'שמירה';
+          errEl.textContent = 'לא הצלחנו לשמור. נסו שוב. (' + (res.error.message || '') + ')';
+          errEl.classList.add('show');
+          return;
+        }
+        close();
+      });
+    });
+
+    bg.classList.add('show');
+  }
+
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('.edrow');
+    if (!b) return;
+    e.stopPropagation();
+    openContentEditModal(b.dataset.editfor);
+  });
+}
+
 function boot(){
   var configured = !!(supabaseConfig && supabaseConfig.url && supabaseConfig.anonKey);
   if (!configured){
@@ -618,6 +841,8 @@ function boot(){
     });
 
     bootChecklist(supabase);
+    bootVotes(supabase);
+    bootContentEdits(supabase);
 
     function getAuthToken(){
       return supabase.auth.getSession().then(function(res){
