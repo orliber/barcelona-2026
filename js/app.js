@@ -1,7 +1,7 @@
 (function(){
   var $=function(s,c){return (c||document).querySelector(s)};
   var $$=function(s,c){return [].slice.call((c||document).querySelectorAll(s))};
-  var days=$$('.day'), items=$$('.item'), legs=$$('.leg'), nav=$('#navrow');
+  var days=$$('.day'), legs=$$('.leg'), nav=$('#navrow');
 
   /* bonus toggle per day */
   days.forEach(function(d){
@@ -18,6 +18,15 @@
     });
     $('.dbody',d).appendChild(btn);
   });
+
+  /* פריט בונוס חוזר להסתתר כשמפסיקים לסנן/לפתוח הכל — אלא אם ה"עוד אפשרויות" של
+     היום שלו פתוח בפועל. בלי זה, פריט בונוס שנחשף ע"י חיפוש/פתח-הכל נשאר גלוי לצמיתות. */
+  function restoreBonusVisibility(it){
+    if(!it.classList.contains('bonus')) return;
+    var day=it.closest('.day');
+    var moreBtn=day && day.querySelector('.morebtn');
+    it.classList.toggle('hidebonus', !(moreBtn && moreBtn.classList.contains('on')));
+  }
 
   /* item expand */
   document.addEventListener('click',function(e){
@@ -67,12 +76,13 @@
       if(cnt2) cnt2.textContent = (st.loc==='all'&&st.style==='all') ? cards.length+' '+noun : n+' מתוך '+cards.length;
       if(none) none.classList.toggle('show',n===0);
     }
+    $$('.fc',sec).forEach(function(x){ x.setAttribute('aria-pressed', x.classList.contains('on')?'true':'false'); });
     bars.forEach(function(bar){
       bar.addEventListener('click',function(e){
         var b=e.target.closest('.fc'); if(!b)return;
         var dim=b.dataset.dim;
-        $$('.fc[data-dim="'+dim+'"]',sec).forEach(function(x){x.classList.remove('on')});
-        b.classList.add('on');
+        $$('.fc[data-dim="'+dim+'"]',sec).forEach(function(x){ x.classList.remove('on'); x.setAttribute('aria-pressed','false'); });
+        b.classList.add('on'); b.setAttribute('aria-pressed','true');
         st[dim]=b.dataset.v;
         run();
       });
@@ -83,14 +93,35 @@
   cardFilter('backup','bnone','bcount','אפשרויות');
 
   /* day collapse */
+  function toggleDay(topEl){
+    var day=topEl.parentElement;
+    day.classList.toggle('shut');
+    topEl.setAttribute('aria-expanded', day.classList.contains('shut') ? 'false' : 'true');
+  }
   $$('.daytop').forEach(function(t){
-    t.addEventListener('click',function(e){ if(!e.target.closest('a,button')) t.parentElement.classList.toggle('shut'); });
+    t.setAttribute('aria-expanded', t.parentElement.classList.contains('shut') ? 'false' : 'true');
+    t.addEventListener('click',function(e){ if(!e.target.closest('a,button')) toggleDay(t); });
     t.addEventListener('keydown',function(e){
-      if(e.key==='Enter'||e.key===' '){e.preventDefault();t.parentElement.classList.toggle('shut');}
+      if(e.key==='Enter'||e.key===' '){e.preventDefault(); toggleDay(t);}
     });
   });
+
+  /* כרטיס הטיסה היה נגיש רק לעכבר/מגע — בלי tabindex/role אי אפשר בכלל להגיע אליו
+     או לפתוח אותו במקלדת/קורא מסך */
   var fh=$('.fly-h');
-  if(fh) fh.addEventListener('click',function(e){ if(!e.target.closest('a,button')) $('.fly').classList.toggle('shut'); });
+  if(fh){
+    fh.setAttribute('tabindex','0');
+    fh.setAttribute('role','button');
+    fh.setAttribute('aria-expanded', $('.fly').classList.contains('shut') ? 'false' : 'true');
+    function toggleFly(){
+      var open=$('.fly').classList.toggle('shut')===false;
+      fh.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    fh.addEventListener('click',function(e){ if(!e.target.closest('a,button')) toggleFly(); });
+    fh.addEventListener('keydown',function(e){
+      if(e.key==='Enter'||e.key===' '){e.preventDefault(); toggleFly();}
+    });
+  }
 
   /* nav */
   nav.addEventListener('click',function(e){
@@ -106,15 +137,23 @@
   /* filters */
   var fr=$('#filterrow'), srch=$('#srch'), cnt=$('#cnt'), empty=$('#empty');
   var cat='all', onlyAnchor=false, q='';
-  items.forEach(function(it){ it._txt=(it.textContent||'').toLowerCase(); });
   function apply(){
+    /* שאילתה חיה בכל הרצה (לא צילום שנלקח פעם אחת בטעינה) — כך שפריטים שהקבוצה
+       מוסיפה בזמן אמת (js/shared.js) גם הם מסוננים/נמצאים נכון, לא רק פריטי המסלול
+       שהיו קיימים כשהדף נטען. */
+    var items=$$('.item');
     var shown=0, filtering=(cat!=='all'||onlyAnchor||q);
     items.forEach(function(it){
+      var txt=it._txt||(it.textContent||'').toLowerCase();
       var ok=((cat==='all')||(it.dataset.k===cat))
            && (!onlyAnchor||it.classList.contains('anchor'))
-           && (!q||it._txt.indexOf(q)>-1);
+           && (!q||txt.indexOf(q)>-1);
       it.classList.toggle('hide',!ok);
-      if(ok){ shown++; if(filtering) it.classList.remove('hidebonus'); }
+      if(ok){
+        shown++;
+        if(filtering) it.classList.remove('hidebonus');
+        else restoreBonusVisibility(it);
+      }
     });
     legs.forEach(function(l){ l.style.display=filtering?'none':''; });
     $$('.morebtn').forEach(function(b){ b.style.display=filtering?'none':''; });
@@ -127,10 +166,17 @@
     cnt.textContent=filtering?shown+' פריטים':'';
     empty.classList.toggle('show',shown===0);
   }
+  $$('.chip',fr).forEach(function(c){ c.setAttribute('aria-pressed', c.classList.contains('on')?'true':'false'); });
   fr.addEventListener('click',function(e){
     var c=e.target.closest('.chip'); if(!c)return;
-    if(c.dataset.k==='anchor'){ onlyAnchor=!onlyAnchor; c.classList.toggle('on',onlyAnchor); }
-    else{ cat=c.dataset.k; $$('.chip:not(.anchor)',fr).forEach(function(x){x.classList.remove('on')}); c.classList.add('on'); }
+    if(c.dataset.k==='anchor'){
+      onlyAnchor=!onlyAnchor; c.classList.toggle('on',onlyAnchor);
+      c.setAttribute('aria-pressed', onlyAnchor?'true':'false');
+    } else {
+      cat=c.dataset.k;
+      $$('.chip:not(.anchor)',fr).forEach(function(x){ x.classList.remove('on'); x.setAttribute('aria-pressed','false'); });
+      c.classList.add('on'); c.setAttribute('aria-pressed','true');
+    }
     apply();
   });
   var tmr;
@@ -140,7 +186,9 @@
   });
 
   /* checklist */
-  var boxes=$$('.task input'), KEY='cb2026.v19';
+  /* המפתח בכוונה *לא* תלוי במספר הגרסה — קודם היה cb2026.v19, כלומר כל עדכון גרסה
+     היה מוחק בשקט את כל הסימונים המקומיים (בעיקר רשימת האריזה, שנשארת מקומית בכוונה). */
+  var boxes=$$('.task input'), KEY='cb2026';
   var pbar=$('#pbar'), pnum=$('#pnum'), ptxt=$('#ptxt');
   var mem={}, hasLS=false;
   try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); hasLS=true; }catch(e){}
@@ -171,7 +219,11 @@
   $('#expand').addEventListener('click',function(){
     allOpen=!allOpen;
     days.forEach(function(d){ d.classList.toggle('shut',!allOpen) });
-    items.forEach(function(i){ i.classList.toggle('open',allOpen); if(allOpen) i.classList.remove('hidebonus'); });
+    $$('.item').forEach(function(i){
+      i.classList.toggle('open',allOpen);
+      if(allOpen) i.classList.remove('hidebonus');
+      else restoreBonusVisibility(i);
+    });
     $$('.wt,.ebody,.fly').forEach(function(w){
       var first=w.querySelector(':scope > .dr, .dr');
       $$('.dr',w).forEach(function(d){ d.classList.toggle('open', allOpen && d===first) });
@@ -187,6 +239,7 @@
   days.forEach(function(d,i){
     if(d.dataset.date===iso){
       d.classList.add('today'); d.classList.remove('shut');
+      var dt=$('.daytop',d); if(dt) dt.setAttribute('aria-expanded','true');
       var p=$$('.pill',nav)[i+1]; if(p)p.classList.add('now');
       setTimeout(function(){ d.scrollIntoView({block:'start'}) },400);
     }
@@ -225,4 +278,11 @@
     setInterval(check,300000);
     document.addEventListener('visibilitychange',function(){ if(!document.hidden) check(); });
   })();
+
+  /* מעטפת אופליין בסיסית — לא נוגע בנתונים החיים (Supabase), רק שהדף עצמו יעלה גם בלי כיסוי */
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
 })();

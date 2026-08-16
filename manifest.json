@@ -1,0 +1,16 @@
+{
+  "name": "קוסטה בראווה + ברצלונה",
+  "short_name": "הטיול שלנו",
+  "description": "מסלול טיול קוסטה בראווה וברצלונה, 26.8–2.9.2026",
+  "start_url": "./?pwa=1",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4EDDF",
+  "theme_color": "#0E4D5C",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
