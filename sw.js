@@ -6,7 +6,7 @@
   בכוונה לא נוגע בכלום שהוא לא מהאתר עצמו (Supabase, esm.sh וכו') — כל בקשה כזו
   עוברת ישר לרשת, בלי שה-service worker מתערב.
 */
-var CACHE_NAME = 'bcn26-shell-v28';
+var CACHE_NAME = 'bcn26-shell-v29';
 var SHELL_ASSETS = [
   './',
   './index.html',
@@ -32,11 +32,39 @@ self.addEventListener('activate', function(event){
   self.clients.claim();
 });
 
+// שיתוף ישיר מהגלריה/וואטסאפ: "שיתוף" → תמונה מגיעה כ-POST ל-share-target.html.
+// לא ניתן להעלות קובץ בלי שרת אמיתי, אז ה-service worker קולט את הבקשה כאן, שומר
+// את הקובץ בזמני ב-cache, ומפנה ל-index.html שאוסף אותו משם ופותח את טופס ההוספה
+// עם הקובץ כבר טעון — בלי שהמשתמש בכלל צריך לפתוח את האתר או לבחור קובץ ידנית.
+function handleShareTarget(event){
+  event.respondWith(
+    event.request.formData().then(function(formData){
+      var file = formData.get('photos');
+      if (!file || !file.size){
+        return Response.redirect('./index.html', 303);
+      }
+      return caches.open('bcn26-share').then(function(cache){
+        return cache.put('shared-file', new Response(file, { headers: { 'content-type': file.type || 'application/octet-stream' } }));
+      }).then(function(){
+        return Response.redirect('./index.html?share=1', 303);
+      });
+    }).catch(function(){
+      return Response.redirect('./index.html', 303);
+    })
+  );
+}
+
 self.addEventListener('fetch', function(event){
   var req = event.request;
   var url = new URL(req.url);
 
-  if (url.origin !== self.location.origin || req.method !== 'GET') return;
+  if (url.origin !== self.location.origin) return;
+
+  if (req.method === 'POST' && url.pathname.endsWith('/share-target.html')){
+    handleShareTarget(event);
+    return;
+  }
+  if (req.method !== 'GET') return;
 
   // דף ה-HTML עצמו: קודם רשת (כדי שבדיקת "יש עדכון" הקיימת באתר תמשיך לעבוד כרגיל),
   // וגיבוי מה-cache רק אם באמת אין רשת.

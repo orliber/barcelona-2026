@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>הטיול שלנו</title>
+</head>
+<body>
+<!--
+  דף הזה כמעט אף פעם לא באמת מוצג — כשמשתפים תמונה מהגלריה/וואטסאפ לאתר (PWA מותקן),
+  ה-service worker (sw.js) יורט את בקשת ה-POST לכתובת הזו *לפני* שהיא מגיעה לכאן,
+  שומר את הקובץ, ומפנה ישר ל-index.html שפותח את טופס ההוספה עם הקובץ כבר טעון.
+  זה קיים רק כגיבוי — למקרה שה-service worker לא רשום/פעיל מסיבה כלשהי.
+-->
+<script>location.replace('./index.html');</script>
+מעביר אתכם לטיול…
+</body>
+</html>

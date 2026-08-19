@@ -370,8 +370,9 @@ function buildModal(onSubmit, onExtract, editItem){
   var fileInput = bg.querySelector('#gfileInput');
   if (fileInput && onExtract){
     var MAX_FILE_BYTES = 6 * 1024 * 1024;
-    fileInput.addEventListener('change', function(){
-      var file = fileInput.files[0];
+    // בפונקציה נפרדת (לא ישירות בתוך ה-listener) כדי שגם קובץ שמגיע משיתוף ישיר
+    // מהגלריה/וואטסאפ (share target, ראו boot()) יוכל להזין את אותה זרימה בדיוק.
+    function handleFile(file){
       if (!file) return;
       var statusEl = bg.querySelector('#gfileStatus');
       if (file.size > MAX_FILE_BYTES){
@@ -405,7 +406,9 @@ function buildModal(onSubmit, onExtract, editItem){
       };
       reader.onerror = function(){ extracting = false; setSaveEnabled(); setStatus(statusEl, 'שגיאה בקריאת הקובץ.', false); };
       reader.readAsDataURL(file);
-    });
+    }
+    fileInput.addEventListener('change', function(){ handleFile(fileInput.files[0]); });
+    bg.receiveSharedFile = handleFile;
   }
 
   var urlInput = bg.querySelector('#gUrlInput'), urlGoBtn = bg.querySelector('#gUrlGo');
@@ -586,6 +589,7 @@ function mountAddUi(modal){
   fab.addEventListener('click', openModal);
   var addBtn = document.getElementById('addBtn');
   if (addBtn) addBtn.addEventListener('click', openModal);
+  modal.openModal = openModal;
 
   // ה-FAB רלוונטי בעיקר ליד "מהקבוצה" — מסתירים אותו אחרי שגוללים משם והלאה (מסעדות/
   // גיבוי/תקציב/מידע), כי בפינה השמאלית-תחתונה הקבועה שלו הוא עלול לכסות כפתורים
@@ -1219,7 +1223,26 @@ function boot(){
       openEditModal(docSnap, submitEdit);
     }
 
-    mountAddUi(buildModal(submitItem, submitExtract));
+    var addModal = buildModal(submitItem, submitExtract);
+    mountAddUi(addModal);
+
+    // שיתוף ישיר מהגלריה/וואטסאפ (רק כשהאתר מותקן כ-PWA): sw.js קלט את הקובץ,
+    // שמר אותו זמנית ב-cache, והפנה לכאן עם ?share=1. שולפים אותו, פותחים את טופס
+    // ההוספה, ומזינים אותו בדיוק כאילו נבחר ידנית — בלי שהמשתמש בכלל פתח את האתר לבד.
+    if (location.search.indexOf('share=1') > -1 && 'caches' in window){
+      history.replaceState(null, '', location.pathname);
+      caches.open('bcn26-share').then(function(cache){
+        return cache.match('shared-file').then(function(res){
+          if (!res) return;
+          cache.delete('shared-file');
+          return res.blob().then(function(blob){
+            addModal.openModal();
+            var file = new File([blob], 'shared', { type: blob.type || 'image/jpeg' });
+            if (addModal.receiveSharedFile) addModal.receiveSharedFile(file);
+          });
+        });
+      }).catch(function(err){ console.error('[shared.js] shared file pickup failed', err); });
+    }
   }).catch(function(err){
     console.error('[shared.js] failed to load Supabase SDK', err);
     if (groupEmptyEl) groupEmptyEl.textContent = 'לא הצלחנו לטעון את התוכן המשותף. נסו לרענן את הדף.';
