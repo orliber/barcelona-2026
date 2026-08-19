@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0E4D5C">
-<meta name="app-version" content="25">
+<meta name="app-version" content="26">
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -235,6 +235,9 @@
   @media print{
     .navbar,.filterbar,.prbtn,.ico{display:none}
     .fab,.btn-add,.modal-bg,.linkbtn{display:none!important}
+    .swipeactions,.tlouter,.countdown,.votebtn{display:none!important}
+    .swiperow>.row{transform:none!important}
+    .item.removed{display:none!important}
     body{background:#fff;font-size:11.5px}
     .hero{background:var(--sea)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .day,.bcard,.eat,.plain,.fly{break-inside:avoid}
@@ -815,7 +818,7 @@
   <button id="updGo">רענון</button>
   <button class="x" id="updX" aria-label="סגור">✕</button>
 </div>
-<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 25 · עודכן 19 באוגוסט 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
+<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 26 · עודכן 19 באוגוסט 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
 </footer> <script src="js/app.js" defer></script>
 <script src="js/weather.js" defer></script>
 <script type="module" src="js/shared.js"></script>

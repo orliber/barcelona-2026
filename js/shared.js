@@ -161,8 +161,10 @@ function buildItemCard(docSnap){
   var swiperow = document.createElement('div');
   swiperow.className = 'swiperow';
   swiperow.style.setProperty('--reveal', '116px');
-  swiperow.appendChild(actions);
+  // .row קודם ב-DOM (סדר ה-Tab מגיע לפריט עצמו לפני "עריכה/הסרה" הנסתרים) — המיקום
+  // החזותי לא מושפע כי .swipeactions ב-position:absolute ממילא.
   swiperow.appendChild(row);
+  swiperow.appendChild(actions);
 
   card.appendChild(swiperow);
   card.appendChild(wt);
@@ -539,7 +541,10 @@ function mountAddUi(modal){
     var ticking = false;
     function updateFabVisibility(){
       var groupBottom = groupSection.offsetTop + groupSection.offsetHeight;
-      fab.classList.toggle('hide', (window.scrollY + window.innerHeight * 0.4) > groupBottom);
+      var hide = (window.scrollY + window.innerHeight * 0.4) > groupBottom;
+      fab.classList.toggle('hide', hide);
+      fab.setAttribute('aria-hidden', hide ? 'true' : 'false');
+      fab.tabIndex = hide ? -1 : 0;
       ticking = false;
     }
     window.addEventListener('scroll', function(){
@@ -741,6 +746,7 @@ function bootVotes(supabase){
       btn.querySelector('.vc').textContent = s.count;
       btn.querySelector('.vh').textContent = s.mine ? '❤️' : '🤍';
       btn.classList.toggle('on', s.mine);
+      btn.setAttribute('aria-pressed', s.mine ? 'true' : 'false');
     });
   }
 
@@ -812,20 +818,50 @@ function bootContentEdits(supabase){
       what: what ? what.textContent : '',
       homeDay: eid.split('-')[0],
       parent: el.parentNode,
-      nextSibling: el.nextSibling
+      nextSibling: el.nextSibling,
+      wasBonus: el.classList.contains('bonus')
     };
   });
 
   var active = {}; // eid -> row
 
-  function moveToDay(el, dayId){
+  // מעדכן את "עוד X אפשרויות ליום הזה" של יום אחרי שבולט בונוס עזב אותו (הועבר ליום
+  // אחר) — סופר מחדש מה-DOM בפועל, לא סומך על מספר קבוע שנקבע פעם אחת בטעינה.
+  // מסתיר את הכפתור לגמרי אם לא נשארו אפשרויות בונוס באותו יום.
+  function refreshMorebtn(dayId){
+    var day = document.getElementById(dayId);
+    var btn = day && day.querySelector('.morebtn');
+    if (!btn) return;
+    var remaining = day.querySelectorAll('.item.bonus').length;
+    if (remaining === 0){ btn.remove(); return; }
+    if (!btn.classList.contains('on')){
+      var span = btn.querySelector('span');
+      if (span) span.textContent = 'עוד ' + remaining + ' אפשרויות ליום הזה';
+    }
+  }
+
+  function moveToDay(el, dayId, homeDay){
+    // בולט בונוס שהוזז ליום אחר מנותק מהכפתור "עוד אפשרויות" של היום החדש (הוא נבנה
+    // פעם אחת בטעינה לפי הבולטים המקוריים של אותו יום) — כדי שלא יישאר תקוע מוסתר
+    // לצמיתות, מציגים אותו תמיד ברגע שהוא עובר יום. חוזר "בונוס" אם משחזרים למקור.
+    el.classList.remove('bonus', 'hidebonus');
     var dbody = document.querySelector('#' + dayId + ' .dbody');
     if (dbody) dbody.appendChild(el);
+    if (homeDay && homeDay !== dayId) refreshMorebtn(homeDay);
   }
   function restorePosition(eid, el){
     var orig = originals[eid];
     if (orig.nextSibling && orig.nextSibling.parentNode === orig.parent) orig.parent.insertBefore(el, orig.nextSibling);
     else orig.parent.appendChild(el);
+    if (orig.wasBonus){
+      // חוזר "בונוס" אצל היום הביתי שלו — אבל מכבד את המצב הנוכחי בפועל של "עוד
+      // אפשרויות" (פתוח/סגור) באותו יום, ולא סוגר בכוח בולט שמישהו כבר פתח לצפייה.
+      el.classList.add('bonus');
+      var day = document.getElementById(orig.homeDay);
+      var moreBtn = day && day.querySelector('.morebtn');
+      el.classList.toggle('hidebonus', !(moreBtn && moreBtn.classList.contains('on')));
+      refreshMorebtn(orig.homeDay);
+    }
   }
 
   function applyRow(row){
@@ -856,7 +892,7 @@ function bootContentEdits(supabase){
     }
 
     var targetDay = row.moved_day || orig.homeDay;
-    if (targetDay !== orig.homeDay) moveToDay(el, targetDay);
+    if (targetDay !== orig.homeDay) moveToDay(el, targetDay, orig.homeDay);
     else restorePosition(row.edit_key, el);
 
     if (ttl){

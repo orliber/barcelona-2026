@@ -11,11 +11,14 @@
     bonus.forEach(function(b){ b.classList.add('hidebonus') });
     var btn=document.createElement('button');
     btn.className='morebtn'; btn.type='button';
-    btn.innerHTML='<svg class="i"><use href="#i-chev"/></svg><span>עוד '+bonus.length+' אפשרויות ליום הזה</span>';
+    /* שאילתה חיה, לא bonus.length הקבוע מהטעינה — כדי שהמספר יישאר נכון גם אחרי
+       שבולט בונוס מוזז ליום אחר דרך "עריכת פריט במסלול" (js/shared.js). */
+    function liveBonus(){ return $$('.item.bonus',d); }
+    btn.innerHTML='<svg class="i"><use href="#i-chev"/></svg><span>עוד '+liveBonus().length+' אפשרויות ליום הזה</span>';
     btn.addEventListener('click',function(){
       var on=btn.classList.toggle('on');
-      bonus.forEach(function(b){ b.classList.toggle('hidebonus',!on) });
-      btn.querySelector('span').textContent = on ? 'הסתר אפשרויות נוספות' : 'עוד '+bonus.length+' אפשרויות ליום הזה';
+      liveBonus().forEach(function(b){ b.classList.toggle('hidebonus',!on) });
+      btn.querySelector('span').textContent = on ? 'הסתר אפשרויות נוספות' : 'עוד '+liveBonus().length+' אפשרויות ליום הזה';
     });
     $('.dbody',d).appendChild(btn);
   });
@@ -361,8 +364,10 @@
         rb.type='button'; rb.className='rmrow sa-del'; rb.dataset.editfor=it.dataset.eid;
         rb.innerHTML='<svg class="i"><use href="#i-trash"/></svg><span>הסרה</span>';
         actions.appendChild(rb);
-        wrap.appendChild(actions);
+        // .row קודם ב-DOM (כדי שסדר ה-Tab יגיע לפריט עצמו לפני "עריכה/הסרה" הנסתרים) —
+        // המיקום החזותי לא מושפע כי .swipeactions ב-position:absolute ממילא.
         wrap.appendChild(row);
+        wrap.appendChild(actions);
       });
     });
   })();
@@ -451,7 +456,7 @@
       bar.className='rsvbar';
       bar.innerHTML =
         '<div class="task"><input type="checkbox" id="'+key+'"><label for="'+key+'"><strong>הזמנו מקום ✓</strong></label></div>'+
-        '<button type="button" class="votebtn" data-rkey="'+slug(name.textContent)+'"><span class="vh">🤍</span><span class="vc">0</span></button>';
+        '<button type="button" class="votebtn" data-rkey="'+slug(name.textContent)+'" aria-pressed="false" aria-label="הצבעה: רוצים לנסות את '+name.textContent.replace(/"/g,'')+'"><span class="vh">🤍</span><span class="vc">0</span></button>';
       body.appendChild(bar);
     });
   })();
