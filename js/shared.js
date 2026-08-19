@@ -678,7 +678,7 @@ function bootChecklist(supabase){
     if (res.error){ console.error('[shared.js] checklist fetch failed', res.error); return; }
     res.data.forEach(function(row){ applyRemote(row.task_id, row.checked); });
     refreshProgress();
-  });
+  }).catch(function(err){ console.error('[shared.js] checklist fetch threw', err); });
 
   supabase.channel('checklist-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist' }, function(payload){
@@ -765,13 +765,13 @@ function bootVotes(supabase){
   supabase.from('restaurant_votes').select('*').then(function(res){
     if (res.error){ console.error('[shared.js] votes fetch failed', res.error); return; }
     applyRows(res.data);
-  });
+  }).catch(function(err){ console.error('[shared.js] votes fetch threw', err); });
 
   supabase.channel('votes-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'restaurant_votes' }, function(){
       supabase.from('restaurant_votes').select('*').then(function(res){
         if (!res.error) applyRows(res.data);
-      });
+      }).catch(function(){});
     })
     .subscribe();
 
@@ -912,7 +912,7 @@ function bootContentEdits(supabase){
   supabase.from('content_edits').select('*').then(function(res){
     if (res.error){ console.error('[shared.js] content_edits fetch failed', res.error); return; }
     res.data.forEach(applyRow);
-  });
+  }).catch(function(err){ console.error('[shared.js] content_edits fetch threw', err); });
 
   supabase.channel('content-edits-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'content_edits' }, function(payload){
@@ -1098,13 +1098,28 @@ function boot(){
       });
     }
 
-    var refreshSeq = 0;
+    var refreshSeq = 0, everSucceeded = false;
+    function onFetchTrouble(){
+      // רק אם עדיין אין שום תוכן מוצג — לא דורסים רשימה שכבר נטענה בהצלחה קודם
+      // (למשל אם החיבור נופל אחרי טעינה תקינה, לא רוצים למחוק את מה שכבר מוצג).
+      if (!everSucceeded && groupEmptyEl) groupEmptyEl.textContent = 'אין חיבור לאינטרנט כרגע — ננסה שוב כשהחיבור יחזור.';
+    }
     function refresh(){
       var mySeq = ++refreshSeq;
+      // כשאין אינטרנט בכלל, ה-fetch הפנימי לפעמים לא נכשל מהר — supabase-js מנסה שוב
+      // כמה פעמים ברקע לפני שהוא בכלל מגיע ל-then/catch. טיימר גיבוי מבטיח שהמשתמש
+      // לא יישאר תקוע על "טוען…" לנצח בזמן שזה קורה.
+      setTimeout(function(){ if (mySeq === refreshSeq) onFetchTrouble(); }, 8000);
       supabase.from('items').select('*').order('created_at', { ascending: false }).then(function(res){
         if (mySeq !== refreshSeq) return; // תגובה מיושנת שהוקדמה ע"י בקשה חדשה יותר — מתעלמים
-        if (res.error){ console.error('[shared.js] fetch failed', res.error); return; }
+        if (res.error){ console.error('[shared.js] fetch failed', res.error); onFetchTrouble(); return; }
+        everSucceeded = true;
         render(res.data.map(rowToDocSnap), onDelete, onEdit);
+      }).catch(function(err){
+        // כשלון רשת דוחה את ה-promise במקום להחזיר {error} — צריך catch נפרד.
+        if (mySeq !== refreshSeq) return;
+        console.error('[shared.js] fetch threw', err);
+        onFetchTrouble();
       });
     }
 
@@ -1112,6 +1127,7 @@ function boot(){
       .on('postgres_changes', { event: '*', schema: 'public', table: 'items' }, refresh)
       .subscribe();
     refresh();
+    window.addEventListener('online', refresh);
 
     // כשמישהו מוסיף/עורך הזמנת מלון או רכב דרך הלוח החי, מסמנים לבד את המשימה
     // המתאימה ב"מה להזמין" — לפי הסוג והיום שה-AI קבע בפועל (לא מה שהוקלד בטופס,

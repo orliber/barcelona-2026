@@ -294,6 +294,15 @@
     });
   }
 
+  /* ---- באנר "אין אינטרנט" — רלוונטי בכבישים כפריים בקוסטה בראווה עם כיסוי חלש ---- */
+  (function(){
+    var bar=$('#offlinebar'); if(!bar) return;
+    function update(){ bar.classList.toggle('show', !navigator.onLine); }
+    window.addEventListener('online',update);
+    window.addEventListener('offline',update);
+    update();
+  })();
+
   /* ---- עוד כמה ימים לטיול / ימים שעברו ---- */
   (function(){
     var el=$('#countdown'); if(!el) return;

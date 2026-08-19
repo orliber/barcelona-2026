@@ -6,7 +6,7 @@
   בכוונה לא נוגע בכלום שהוא לא מהאתר עצמו (Supabase, esm.sh וכו') — כל בקשה כזו
   עוברת ישר לרשת, בלי שה-service worker מתערב.
 */
-var CACHE_NAME = 'bcn26-shell-v26';
+var CACHE_NAME = 'bcn26-shell-v27';
 var SHELL_ASSETS = [
   './',
   './index.html',
