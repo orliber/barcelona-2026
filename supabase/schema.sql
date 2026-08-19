@@ -10,8 +10,16 @@ create table if not exists public.items (
   price text check (char_length(price) <= 40),
   link text check (char_length(link) <= 500),
   added_by text check (char_length(added_by) <= 40),
+  attachment_url text check (attachment_url is null or char_length(attachment_url) <= 500),
   created_at timestamptz not null default now()
 );
+
+-- bucket ציבורי (קריאה בלבד לכולם) לקבצי ההזמנה שמעלים דרך extract-item — כדי שתהיה
+-- אח"כ גישה מהירה למסמך המקורי מתוך הפריט עצמו. העלאה עוברת רק דרך Edge Function עם
+-- מפתח service_role, אף פעם לא ישירות מהדפדפן — אין policies על storage.objects כאן.
+insert into storage.buckets (id, name, public)
+values ('item-attachments', 'item-attachments', true)
+on conflict (id) do nothing;
 
 alter table public.items enable row level security;
 
@@ -97,11 +105,16 @@ alter publication supabase_realtime add table public.restaurant_votes;
 -- "upsert לפי מפתח, בלי מחיקה ישירה" כמו checklist/votes. edit_key נגזר ב-JS (app.js)
 -- מהיום ומהמיקום בתוך היום (למשל d1-0), ומופעל בזמן טעינה על גבי הטקסט המקורי.
 -- cleared=true פירושו "בטלו את השינוי, חזרו למקור" — בלי למחוק שורה מהטבלה.
+-- removed=true מציין שבולט מקורי הוסר (מבחינת כל הצופים) בלי למחוק אותו מה-HTML —
+-- הוא רק מוסתר. day/dayEnd מאפשרים גם "להזיז" בולט מקורי ליום אחר: אם הם ממולאים,
+-- app.js מציג אותו ביום שנבחר במקום ביום המקורי שלו ב-HTML.
 create table if not exists public.content_edits (
   edit_key text primary key check (char_length(edit_key) <= 40),
   title text check (char_length(title) <= 160),
   what text check (char_length(what) <= 400),
   cleared boolean not null default false,
+  removed boolean not null default false,
+  moved_day text check (moved_day is null or char_length(moved_day) <= 20),
   updated_by text not null check (char_length(updated_by) <= 40),
   updated_at timestamptz not null default now()
 );

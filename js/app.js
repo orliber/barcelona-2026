@@ -349,7 +349,7 @@
         if(!row || row.parentElement.classList.contains('swiperow')) return;
         var wrap=document.createElement('div');
         wrap.className='swiperow';
-        wrap.style.setProperty('--reveal','58px');
+        wrap.style.setProperty('--reveal','116px');
         row.parentNode.insertBefore(wrap,row);
         var actions=document.createElement('div');
         actions.className='swipeactions';
@@ -357,6 +357,10 @@
         b.type='button'; b.className='edrow sa-edit'; b.dataset.editfor=it.dataset.eid;
         b.innerHTML='<svg class="i"><use href="#i-edit"/></svg><span>עריכה</span>';
         actions.appendChild(b);
+        var rb=document.createElement('button');
+        rb.type='button'; rb.className='rmrow sa-del'; rb.dataset.editfor=it.dataset.eid;
+        rb.innerHTML='<svg class="i"><use href="#i-trash"/></svg><span>הסרה</span>';
+        actions.appendChild(rb);
         wrap.appendChild(actions);
         wrap.appendChild(row);
       });

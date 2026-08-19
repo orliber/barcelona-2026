@@ -94,6 +94,9 @@ Deno.serve(async (req) => {
     price: clip(body.price, 40),
   };
   const link = clip(body.link, 500);
+  const rawAttachment = clip(body.attachmentUrl, 500);
+  const attachmentPrefix = `${Deno.env.get("SUPABASE_URL")}/storage/v1/object/public/item-attachments/`;
+  const attachmentUrl = rawAttachment.startsWith(attachmentPrefix) ? rawAttachment : null;
 
   let cleaned = raw;
   try {
@@ -140,6 +143,7 @@ Deno.serve(async (req) => {
       price: cleaned.price,
       link: link || null,
       added_by: addedBy,
+      attachment_url: attachmentUrl,
     })
     .eq("id", id)
     .select()

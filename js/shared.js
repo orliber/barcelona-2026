@@ -125,6 +125,15 @@ function buildItemCard(docSnap){
     a.innerHTML = '<svg class="i"><use href="#i-globe"/></svg><span>קישור</span>';
     ico.appendChild(a);
   }
+  if (isHttpUrl(it.attachmentUrl)){
+    var att = document.createElement('a');
+    att.className = 'ib';
+    att.href = it.attachmentUrl;
+    att.target = '_blank';
+    att.rel = 'noopener noreferrer';
+    att.innerHTML = '<svg class="i"><use href="#i-doc"/></svg><span>המסמך המקורי</span>';
+    ico.appendChild(att);
+  }
   wt.appendChild(ico);
 
   var who = document.createElement('div');
@@ -250,7 +259,11 @@ function buildModal(onSubmit, onExtract, editItem){
     ? '<div class="field"><label>העלאת תמונה או PDF של ההזמנה</label>' +
       '<input type="file" id="gfileInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf">' +
       '<div id="gfileStatus" class="gfilestatus">ה-AI יזהה לבד את הסוג, היום, ופרטי המחיר.</div></div>' +
-      '<button type="button" class="linkbtn" id="gManualToggle">אין קובץ? הוספה ידנית של פעילות או הערה בלבד</button>'
+      '<div class="orsep">או</div>' +
+      '<div class="field"><label>קישור להזמנה (Booking.com וכו׳)</label>' +
+      '<div class="urlrow"><input type="url" id="gUrlInput" placeholder="https://www.booking.com/..."><button type="button" class="btn-cancel" id="gUrlGo">חילוץ</button></div>' +
+      '<div id="gUrlStatus" class="gfilestatus"></div></div>' +
+      '<button type="button" class="linkbtn" id="gManualToggle">אין קובץ או קישור? הוספה ידנית של פעילות או הערה בלבד</button>'
     : '';
 
   bg.innerHTML =
@@ -295,6 +308,8 @@ function buildModal(onSubmit, onExtract, editItem){
   var MANUAL_TYPES = TYPES.filter(function(t){ return t.id === 'activity' || t.id === 'note'; });
   if (!showUpload) renderTypeButtons(TYPES, isEdit ? editItem.type : TYPES[0].id);
 
+  var attachmentUrl = isEdit ? (editItem.attachmentUrl || '') : '';
+
   function close(){
     bg.classList.remove('show');
     if (isEdit) setTimeout(function(){ bg.remove(); }, 250);
@@ -336,6 +351,7 @@ function buildModal(onSubmit, onExtract, editItem){
           bg.querySelector('#gday').value = fields.day || 'general';
           bg.querySelector('#gdetails').value = fields.details || '';
           bg.querySelector('#gprice').value = fields.price || '';
+          attachmentUrl = fields.attachmentUrl || '';
         }).catch(function(err){
           statusEl.textContent = 'לא הצלחנו לחלץ מהקובץ הזה. אפשר להוסיף ידנית פעילות/הערה למעלה. (' + (err && err.message || '') + ')';
           console.error(err);
@@ -343,6 +359,35 @@ function buildModal(onSubmit, onExtract, editItem){
       };
       reader.onerror = function(){ statusEl.textContent = 'שגיאה בקריאת הקובץ.'; };
       reader.readAsDataURL(file);
+    });
+  }
+
+  var urlInput = bg.querySelector('#gUrlInput'), urlGoBtn = bg.querySelector('#gUrlGo');
+  if (urlInput && urlGoBtn && onExtract){
+    urlGoBtn.addEventListener('click', function(){
+      var url = urlInput.value.trim();
+      var statusEl = bg.querySelector('#gUrlStatus');
+      if (!isHttpUrl(url)){
+        statusEl.textContent = 'זה לא נראה כמו קישור תקין.';
+        return;
+      }
+      statusEl.textContent = 'פותח את הקישור וקורא אותו…';
+      urlGoBtn.disabled = true;
+      onExtract({ url: url }).then(function(fields){
+        urlGoBtn.disabled = false;
+        statusEl.textContent = 'מולא אוטומטית מהקישור — אפשר לערוך לפני השמירה.';
+        fieldsWrap.style.display = 'block';
+        renderTypeButtons(TYPES, fields.type);
+        bg.querySelector('#gtitle').value = fields.title || '';
+        bg.querySelector('#gday').value = fields.day || 'general';
+        bg.querySelector('#gdetails').value = fields.details || '';
+        bg.querySelector('#gprice').value = fields.price || '';
+        bg.querySelector('#glink').value = url;
+      }).catch(function(err){
+        urlGoBtn.disabled = false;
+        statusEl.textContent = 'לא הצלחנו לפתוח או לקרוא את הקישור הזה. אפשר להעלות תמונה/PDF במקום, או להוסיף ידנית פעילות/הערה. (' + (err && err.message || '') + ')';
+        console.error(err);
+      });
     });
   }
 
@@ -399,7 +444,8 @@ function buildModal(onSubmit, onExtract, editItem){
       details: bg.querySelector('#gdetails').value.trim(),
       price: bg.querySelector('#gprice').value.trim(),
       link: bg.querySelector('#glink').value.trim(),
-      addedBy: name
+      addedBy: name,
+      attachmentUrl: attachmentUrl || ''
     };
     if (isEdit) payload.id = editItem.id;
 
@@ -410,6 +456,11 @@ function buildModal(onSubmit, onExtract, editItem){
         bg.querySelector('#gdetails').value = '';
         bg.querySelector('#gprice').value = '';
         bg.querySelector('#glink').value = '';
+        attachmentUrl = '';
+        if (fileInput) fileInput.value = '';
+        if (urlInput) urlInput.value = '';
+        var gfs = bg.querySelector('#gfileStatus'); if (gfs) gfs.textContent = 'ה-AI יזהה לבד את הסוג, היום, ופרטי המחיר.';
+        var gus = bg.querySelector('#gUrlStatus'); if (gus) gus.textContent = '';
       }
       close();
     }).catch(function(err){
@@ -433,7 +484,8 @@ function openEditModal(docSnap, onUpdate){
     details: it.details,
     price: it.price,
     link: it.link,
-    addedBy: it.addedBy
+    addedBy: it.addedBy,
+    attachmentUrl: it.attachmentUrl
   });
   modal.classList.add('show');
 }
@@ -503,7 +555,7 @@ function bootDemo(){
 
   function submitDemoItem(data){
     data = { type: data.type, title: data.title, day: data.day, dayEnd: data.day, details: data.details,
-      price: data.price, link: data.link, addedBy: data.addedBy,
+      price: data.price, link: data.link, addedBy: data.addedBy, attachmentUrl: data.attachmentUrl,
       id: 'demo-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
       createdAt: Date.now() };
     items.push(data);
@@ -516,7 +568,8 @@ function bootDemo(){
     if (idx === -1) return Promise.resolve();
     items[idx] = Object.assign({}, items[idx], {
       type: data.type, title: data.title, day: data.day, dayEnd: data.day,
-      details: data.details, price: data.price, link: data.link, addedBy: data.addedBy
+      details: data.details, price: data.price, link: data.link, addedBy: data.addedBy,
+      attachmentUrl: data.attachmentUrl
     });
     persist(); notify();
     return Promise.resolve();
@@ -549,7 +602,8 @@ function rowToDocSnap(row){
         price: row.price,
         link: row.link,
         addedBy: row.added_by,
-        createdAt: row.created_at
+        createdAt: row.created_at,
+        attachmentUrl: row.attachment_url
       };
     }
   };
@@ -727,31 +781,69 @@ function bootContentEdits(supabase){
   Object.keys(eidEls).forEach(function(eid){
     var el = eidEls[eid];
     var ttl = el.querySelector('.ttl'), what = el.querySelector('.what');
-    originals[eid] = { title: ttl ? ttl.textContent : '', what: what ? what.textContent : '' };
+    originals[eid] = {
+      title: ttl ? ttl.textContent : '',
+      what: what ? what.textContent : '',
+      homeDay: eid.split('-')[0],
+      parent: el.parentNode,
+      nextSibling: el.nextSibling
+    };
   });
 
   var active = {}; // eid -> row
 
+  function moveToDay(el, dayId){
+    var dbody = document.querySelector('#' + dayId + ' .dbody');
+    if (dbody) dbody.appendChild(el);
+  }
+  function restorePosition(eid, el){
+    var orig = originals[eid];
+    if (orig.nextSibling && orig.nextSibling.parentNode === orig.parent) orig.parent.insertBefore(el, orig.nextSibling);
+    else orig.parent.appendChild(el);
+  }
+
   function applyRow(row){
     var el = eidEls[row.edit_key];
     if (!el) return;
+    var orig = originals[row.edit_key];
     var ttl = el.querySelector('.ttl'), what = el.querySelector('.what');
-    // ttl.textContent תמיד מוחק גם ילדים קודמים (כולל תג "נערך" קודם) — לכן בונים
-    // מחדש את התג *אחרי* קביעת הטקסט, לא לפני, אחרת הוא נעלם עם כל עדכון חוזר.
+    // ttl.textContent תמיד מוחק גם ילדים קודמים (כולל תג "נערך"/"הועבר" קודם) — לכן
+    // בונים מחדש את התגים *אחרי* קביעת הטקסט, לא לפני, אחרת הם נעלמים בכל עדכון חוזר.
+    var rmBtn = el.querySelector('.rmrow');
     if (row.cleared){
-      if (ttl) ttl.textContent = originals[row.edit_key].title;
-      if (what) what.textContent = originals[row.edit_key].what;
+      if (ttl) ttl.textContent = orig.title;
+      if (what) what.textContent = orig.what;
+      el.classList.remove('removed');
+      restorePosition(row.edit_key, el);
+      if (rmBtn) rmBtn.innerHTML = '<svg class="i"><use href="#i-trash"/></svg><span>הסרה</span>';
       delete active[row.edit_key];
       return;
     }
     if (ttl && row.title) ttl.textContent = row.title;
     if (what && row.what) what.textContent = row.what;
     active[row.edit_key] = row;
+    el.classList.toggle('removed', !!row.removed);
+    if (rmBtn){
+      rmBtn.innerHTML = row.removed
+        ? '<svg class="i"><use href="#i-edit"/></svg><span>שחזור</span>'
+        : '<svg class="i"><use href="#i-trash"/></svg><span>הסרה</span>';
+    }
+
+    var targetDay = row.moved_day || orig.homeDay;
+    if (targetDay !== orig.homeDay) moveToDay(el, targetDay);
+    else restorePosition(row.edit_key, el);
+
     if (ttl){
       var badge = document.createElement('span');
       badge.className = 'editbadge';
-      badge.textContent = 'נערך ע״י ' + (row.updated_by || 'מישהו');
+      badge.textContent = row.removed ? 'הוסר ע״י ' + (row.updated_by || 'מישהו') : 'נערך ע״י ' + (row.updated_by || 'מישהו');
       ttl.appendChild(badge);
+      if (row.moved_day && row.moved_day !== orig.homeDay){
+        var moveBadge = document.createElement('span');
+        moveBadge.className = 'editbadge';
+        moveBadge.textContent = 'הועבר מ' + dayLabel(orig.homeDay);
+        ttl.appendChild(moveBadge);
+      }
     }
   }
 
@@ -771,9 +863,15 @@ function bootContentEdits(supabase){
     var ttl = el.querySelector('.ttl'), what = el.querySelector('.what');
     // לא קוראים textContent ישירות מ-.ttl — יש בו תג "נערך ע״י" כילד, וזה יתערבב
     // עם הכותרת. משתמשים במקור השמור/בעריכה הפעילה, שהם תמיד הטקסט הנקי בלבד.
+    // כשפריט הוזז/הוסר בלי שהטקסט שלו נערך אף פעם, השורה ב-DB לא כוללת title/what
+    // (הם נשארים null) — לכן תמיד נופלים חזרה למקור הידוע כשאין ערך פעיל, ולא ל-'' ריק.
     var cur = active[eid] || originals[eid];
-    var curTitle = cur ? cur.title : '';
-    var curWhat = cur ? cur.what : '';
+    var curTitle = (cur && cur.title) || originals[eid].title;
+    var curWhat = (cur && cur.what) || originals[eid].what;
+    var currentDay = (active[eid] && active[eid].moved_day) || originals[eid].homeDay;
+    var dayOptions = DAYS.filter(function(d){ return d.id !== 'general'; }).map(function(d){
+      return '<option value="' + d.id + '"' + (d.id === currentDay ? ' selected' : '') + '>' + esc(d.label) + '</option>';
+    }).join('');
 
     var bg = document.createElement('div');
     bg.className = 'modal-bg';
@@ -783,6 +881,7 @@ function bootContentEdits(supabase){
         '<h3>עריכת פריט במסלול</h3>' +
         '<div class="field"><label>כותרת</label><input id="ceTitle" maxlength="160"></div>' +
         (what ? '<div class="field"><label>תיאור קצר</label><textarea id="ceWhat" maxlength="400"></textarea></div>' : '') +
+        '<div class="field"><label>יום</label><select id="ceDay">' + dayOptions + '</select></div>' +
         '<div class="field"><label>השם שלכם (חובה)</label><input id="ceName" maxlength="40" placeholder="איך שתרצו שיראו אתכם"></div>' +
         '<div class="gerr" id="ceErr"></div>' +
         '<div class="modal-actions">' +
@@ -829,7 +928,11 @@ function bootContentEdits(supabase){
       try { localStorage.setItem(NAME_KEY, name); } catch(e){}
       var saveBtn = bg.querySelector('#ceSave');
       saveBtn.disabled = true; saveBtn.textContent = 'שומר…';
-      var payload = { edit_key: eid, title: title, cleared: false, updated_by: name, updated_at: new Date().toISOString() };
+      var selectedDay = bg.querySelector('#ceDay').value;
+      var payload = {
+        edit_key: eid, title: title, cleared: false, updated_by: name, updated_at: new Date().toISOString(),
+        moved_day: selectedDay !== originals[eid].homeDay ? selectedDay : null
+      };
       if (ceWhat) payload.what = ceWhat.value.trim();
       supabase.from('content_edits').upsert(payload).then(function(res){
         if (res.error){
@@ -850,6 +953,32 @@ function bootContentEdits(supabase){
     if (!b) return;
     e.stopPropagation();
     openContentEditModal(b.dataset.editfor);
+  });
+
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('.rmrow');
+    if (!b) return;
+    e.stopPropagation();
+    var eid = b.dataset.editfor;
+    var el = eidEls[eid]; if (!el) return;
+    var isRemoved = el.classList.contains('removed');
+    var cur = active[eid] || originals[eid];
+    var curTitle = (cur && cur.title) || originals[eid].title;
+    var name = '';
+    try { name = localStorage.getItem(NAME_KEY) || ''; } catch(err){}
+    var promptMsg = isRemoved
+      ? 'לשחזר את "' + curTitle + '" בחזרה לתוכנייה? מי משחזר?'
+      : 'להסיר את "' + curTitle + '" מהתוכנייה? אפשר לשחזר אחר כך. מי מסיר?';
+    name = prompt(promptMsg, name);
+    if (name === null) return;
+    name = name.trim();
+    if (!name) return;
+    try { localStorage.setItem(NAME_KEY, name); } catch(err){}
+    supabase.from('content_edits').upsert({
+      edit_key: eid, removed: !isRemoved, updated_by: name, updated_at: new Date().toISOString()
+    }).then(function(res){
+      if (res.error) console.error('[shared.js] remove/restore failed', res.error);
+    });
   });
 }
 
@@ -942,7 +1071,11 @@ function boot(){
     }
 
     function submitExtract(file){
-      return callFunction('extract-item', file).then(function(res){ return res.item; });
+      return callFunction('extract-item', file).then(function(res){
+        var fields = res.item || {};
+        fields.attachmentUrl = res.attachmentUrl || '';
+        return fields;
+      });
     }
 
     function submitEdit(data){

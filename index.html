@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0E4D5C">
-<meta name="app-version" content="23">
+<meta name="app-version" content="24">
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -480,6 +480,9 @@
 
   /* ---------- CONTENT EDITS (עריכה חיה של המסלול המקורי) ---------- */
   .editbadge{display:inline-flex;align-items:center;gap:3px;font-family:'Heebo';font-weight:700;font-size:10px;color:var(--plum);background:rgba(107,74,115,.1);border-radius:8px;padding:2px 7px;margin-inline-start:7px;vertical-align:middle;line-height:1.4;cursor:default}
+  .item.removed .row{opacity:.5}
+  .item.removed .ttl{text-decoration:line-through;text-decoration-color:var(--garnet)}
+  .item.removed .wt{display:none}
 
   /* ---------- RESTAURANT RESERVE + VOTE ---------- */
   .rsvbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;padding-top:11px;border-top:1px solid var(--line-soft)}
@@ -557,6 +560,14 @@
   .gerr.show{display:block}
   .gfilestatus{font-size:12px;color:var(--sea);margin-top:6px;min-height:15px}
   .linkbtn{display:block;width:100%;text-align:center;background:none;border:none;color:var(--sea);font-family:'Heebo';font-weight:700;font-size:12.5px;padding:10px 0 14px;cursor:pointer;text-decoration:underline}
+  .orsep{text-align:center;font-family:'Heebo';font-weight:700;font-size:11.5px;color:var(--ink-soft);margin:12px 0;position:relative}
+  .orsep::before,.orsep::after{content:"";position:absolute;top:50%;width:40%;height:1px;background:var(--line)}
+  .orsep::before{right:0}
+  .orsep::after{left:0}
+  .urlrow{display:flex;gap:8px}
+  .urlrow input{flex:1;min-width:0}
+  .urlrow button{flex:0 0 auto;padding:0 16px;border-radius:10px;font-family:'Heebo';font-weight:700;font-size:13px;cursor:pointer}
+  .urlrow button:disabled{opacity:.5;cursor:default}
 </style>
 </head>
 <body>
@@ -592,6 +603,7 @@
 <symbol id="i-lang" viewBox="0 0 24 24"><path d="M5 8h11M9 4v4M11.5 16C10 13 8 9.5 8 8M13 20l4-9 4 9M14.5 17h5"/></symbol>
 <symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
 <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6Z"/><path d="M10 11v6M14 11v6"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/></symbol>
 
 <symbol id="s-plane" viewBox="0 0 32 32"><path d="M4 20h24M6 20l3-9h4l-1 9M17 11h4l6 9" stroke-width="1.6"/><circle cx="10" cy="24" r="2" stroke-width="1.6"/><circle cx="23" cy="24" r="2" stroke-width="1.6"/></symbol>
 <symbol id="s-hotel" viewBox="0 0 32 32"><path d="M3 26V14a2 2 0 0 1 2-2h22a2 2 0 0 1 2 2v12M3 21h26M8 12V8a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v4" stroke-width="1.6"/></symbol>
@@ -803,7 +815,7 @@
   <button id="updGo">רענון</button>
   <button class="x" id="updX" aria-label="סגור">✕</button>
 </div>
-<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 23 · עודכן 17 באוגוסט 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
+<footer> <b>קוסטה בראווה + ברצלונה</b> · 26.8–2.9.2026 · 6 נוסעים<br> <span class="ver">גרסה 24 · עודכן 19 באוגוסט 2026</span><br> <button class="prbtn" onclick="window.print()">הדפסה / PDF</button> <button class="prbtn" id="expand">פתח הכל</button> <button class="prbtn" id="rst">איפוס סימונים</button>
 </footer> <script src="js/app.js" defer></script>
 <script src="js/weather.js" defer></script>
 <script type="module" src="js/shared.js"></script>
