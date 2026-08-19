@@ -68,6 +68,16 @@ function isHttpUrl(s){
   } catch(e){ return false; }
 }
 
+var toastTimer = null;
+function showToast(msg){
+  var t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+
 /*
   בכוונה בנוי מאותם קלאסים בדיוק שהמסלול המקורי משתמש בהם (.item/.row/.wt/.ico/.ib) —
   כדי שפריט שהקבוצה מוסיפה יתנהג ויראה בדיוק כמו פריט מסלול אמיתי (כולל פתיחה/סגירה
@@ -258,11 +268,13 @@ function buildModal(onSubmit, onExtract, editItem){
 
   var showUpload = onExtract && !isEdit;
   var uploadHtml = showUpload
-    ? '<div class="field"><label>העלאת תמונה או PDF של ההזמנה</label>' +
-      '<input type="file" id="gfileInput" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf">' +
-      '<div id="gfileStatus" class="gfilestatus">ה-AI יזהה לבד את הסוג, היום, ופרטי המחיר.</div></div>' +
-      '<div class="orsep">או</div>' +
-      '<div class="field"><label>קישור להזמנה (Booking.com וכו׳)</label>' +
+    ? '<div class="field">' +
+      '<label class="dropzone" for="gfileInput"><span class="dzicon">📷</span>' +
+      '<span class="dztxt"><b>הקישו כאן לצילום או העלאת ההזמנה</b><span>תמונה או PDF — נמלא הכל לבד</span></span></label>' +
+      '<input type="file" id="gfileInput" class="visually-hidden" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf">' +
+      '<div id="gfileStatus" class="gfilestatus"></div></div>' +
+      '<button type="button" class="linkbtn" id="gUrlToggle">יש לכם קישור להזמנה במקום? (Booking.com וכו׳)</button>' +
+      '<div class="field" id="gUrlWrap" style="display:none">' +
       '<div class="urlrow"><input type="url" id="gUrlInput" placeholder="https://www.booking.com/..."><button type="button" class="btn-cancel" id="gUrlGo">חילוץ</button></div>' +
       '<div id="gUrlStatus" class="gfilestatus"></div></div>' +
       '<button type="button" class="linkbtn" id="gManualToggle">אין קובץ או קישור? הוספה ידנית של פעילות או הערה בלבד</button>'
@@ -280,7 +292,10 @@ function buildModal(onSubmit, onExtract, editItem){
         '<div class="field"><label>מחיר (לא חובה)</label><input id="gprice" maxlength="40" placeholder="למשל: €240"></div>' +
         '<div class="field"><label>קישור (לא חובה)</label><input id="glink" maxlength="500" placeholder="https://..."></div>' +
       '</div>' +
-      '<div class="field"><label>השם שלכם (חובה)</label><input id="gname" maxlength="40" placeholder="איך שתרצו שיראו אתכם"></div>' +
+      '<div class="field" id="gNameField">' +
+        '<div class="namepill" id="gNamePill" style="display:none">מוסיפים בתור <b id="gNamePillText"></b> · <button type="button" id="gNameChange">לא אני</button></div>' +
+        '<div id="gNameInputWrap"><label>השם שלכם (חובה)</label><input id="gname" maxlength="40" placeholder="איך שתרצו שיראו אתכם"></div>' +
+      '</div>' +
       '<div class="gerr" id="gerr"></div>' +
       '<div class="modal-actions">' +
         '<button type="button" class="btn-cancel" id="gcancel">ביטול</button>' +
@@ -329,12 +344,26 @@ function buildModal(onSubmit, onExtract, editItem){
     saveBtn.textContent = extracting ? 'רגע, עדיין קוראים…' : (isEdit ? 'שמירת שינויים' : 'הוספה');
   }
 
+  function setStatus(statusEl, text, busy){
+    statusEl.textContent = text;
+    statusEl.classList.toggle('busy', !!busy);
+  }
+
   var manualToggle = bg.querySelector('#gManualToggle');
   if (manualToggle){
     manualToggle.addEventListener('click', function(){
       fieldsWrap.style.display = 'block';
       renderTypeButtons(MANUAL_TYPES, MANUAL_TYPES[0].id);
       bg.querySelector('#gtitle').focus();
+    });
+  }
+
+  var urlToggle = bg.querySelector('#gUrlToggle'), urlWrap = bg.querySelector('#gUrlWrap');
+  if (urlToggle && urlWrap){
+    urlToggle.addEventListener('click', function(){
+      urlWrap.style.display = 'block';
+      urlToggle.style.display = 'none';
+      bg.querySelector('#gUrlInput').focus();
     });
   }
 
@@ -346,11 +375,11 @@ function buildModal(onSubmit, onExtract, editItem){
       if (!file) return;
       var statusEl = bg.querySelector('#gfileStatus');
       if (file.size > MAX_FILE_BYTES){
-        statusEl.textContent = 'הקובץ גדול מדי (עד 6MB). אפשר להוסיף ידנית פעילות/הערה למעלה.';
+        setStatus(statusEl, 'הקובץ גדול מדי (עד 6MB). אפשר להוסיף ידנית פעילות/הערה למטה.', false);
         fileInput.value = '';
         return;
       }
-      statusEl.textContent = 'קורא את המסמך…';
+      setStatus(statusEl, 'רגע, קוראים את התמונה בשבילכם…', true);
       extracting = true;
       setSaveEnabled();
       var reader = new FileReader();
@@ -359,7 +388,7 @@ function buildModal(onSubmit, onExtract, editItem){
         onExtract({ mediaType: file.type, data: base64 }).then(function(fields){
           extracting = false;
           setSaveEnabled();
-          statusEl.textContent = 'מולא אוטומטית מהקובץ — אפשר לערוך לפני השמירה.';
+          setStatus(statusEl, '✅ מולא אוטומטית — אפשר לערוך לפני השמירה.', false);
           fieldsWrap.style.display = 'block';
           renderTypeButtons(TYPES, fields.type);
           bg.querySelector('#gtitle').value = fields.title || '';
@@ -370,11 +399,11 @@ function buildModal(onSubmit, onExtract, editItem){
         }).catch(function(err){
           extracting = false;
           setSaveEnabled();
-          statusEl.textContent = 'לא הצלחנו לחלץ מהקובץ הזה. אפשר להוסיף ידנית פעילות/הערה למעלה. (' + (err && err.message || '') + ')';
+          setStatus(statusEl, 'לא הצלחנו לקרוא את התמונה הזו. אפשר להוסיף ידנית פעילות/הערה למטה. (' + (err && err.message || '') + ')', false);
           console.error(err);
         });
       };
-      reader.onerror = function(){ extracting = false; setSaveEnabled(); statusEl.textContent = 'שגיאה בקריאת הקובץ.'; };
+      reader.onerror = function(){ extracting = false; setSaveEnabled(); setStatus(statusEl, 'שגיאה בקריאת הקובץ.', false); };
       reader.readAsDataURL(file);
     });
   }
@@ -385,10 +414,10 @@ function buildModal(onSubmit, onExtract, editItem){
       var url = urlInput.value.trim();
       var statusEl = bg.querySelector('#gUrlStatus');
       if (!isHttpUrl(url)){
-        statusEl.textContent = 'זה לא נראה כמו קישור תקין.';
+        setStatus(statusEl, 'זה לא נראה כמו קישור תקין.', false);
         return;
       }
-      statusEl.textContent = 'פותח את הקישור וקורא אותו…';
+      setStatus(statusEl, 'רגע, פותחים את הקישור וקוראים אותו…', true);
       urlGoBtn.disabled = true;
       extracting = true;
       setSaveEnabled();
@@ -396,7 +425,7 @@ function buildModal(onSubmit, onExtract, editItem){
         urlGoBtn.disabled = false;
         extracting = false;
         setSaveEnabled();
-        statusEl.textContent = 'מולא אוטומטית מהקישור — אפשר לערוך לפני השמירה.';
+        setStatus(statusEl, '✅ מולא אוטומטית מהקישור — אפשר לערוך לפני השמירה.', false);
         fieldsWrap.style.display = 'block';
         renderTypeButtons(TYPES, fields.type);
         bg.querySelector('#gtitle').value = fields.title || '';
@@ -408,15 +437,39 @@ function buildModal(onSubmit, onExtract, editItem){
         urlGoBtn.disabled = false;
         extracting = false;
         setSaveEnabled();
-        statusEl.textContent = 'לא הצלחנו לפתוח או לקרוא את הקישור הזה. אפשר להעלות תמונה/PDF במקום, או להוסיף ידנית פעילות/הערה. (' + (err && err.message || '') + ')';
+        setStatus(statusEl, 'לא הצלחנו לפתוח או לקרוא את הקישור הזה. אפשר להעלות תמונה/PDF במקום, או להוסיף ידנית פעילות/הערה. (' + (err && err.message || '') + ')', false);
         console.error(err);
       });
     });
   }
 
-  var savedName = '';
-  try { savedName = localStorage.getItem(NAME_KEY) || ''; } catch(e){}
-  bg.querySelector('#gname').value = isEdit ? (editItem.addedBy || savedName) : savedName;
+  // אם כבר יש שם שמור (לא בעריכה) — מציגים "מוסיפים בתור X" קומפקטי במקום שדה טקסט
+  // פתוח, כדי שלא יצטרכו למלא את זה שוב בכל הוספה. "לא אני" חושף שוב את השדה לעריכה.
+  // מוגדר כפונקציה (לא רק פעם אחת בבנייה) כי מודל ההוספה נבנה פעם אחת ונשאר בזיכרון —
+  // צריך לרענן את זה בכל פתיחה, כי השם עשוי להישמר רק בהוספה הראשונה בפועל.
+  var namePill = bg.querySelector('#gNamePill'), nameInputWrap = bg.querySelector('#gNameInputWrap');
+  function refreshNamePill(){
+    var savedName = '';
+    try { savedName = localStorage.getItem(NAME_KEY) || ''; } catch(e){}
+    bg.querySelector('#gname').value = isEdit ? (editItem.addedBy || savedName) : savedName;
+    if (!isEdit && savedName && namePill && nameInputWrap){
+      bg.querySelector('#gNamePillText').textContent = savedName;
+      namePill.style.display = 'flex';
+      nameInputWrap.style.display = 'none';
+    }
+  }
+  refreshNamePill();
+  bg.refreshNamePill = refreshNamePill;
+
+  if (namePill && nameInputWrap){
+    var nameChangeBtn = bg.querySelector('#gNameChange');
+    if (nameChangeBtn) nameChangeBtn.addEventListener('click', function(){
+      namePill.style.display = 'none';
+      nameInputWrap.style.display = 'block';
+      bg.querySelector('#gname').value = '';
+      bg.querySelector('#gname').focus();
+    });
+  }
 
   if (isEdit){
     bg.querySelector('#gtitle').value = editItem.title || '';
@@ -479,6 +532,7 @@ function buildModal(onSubmit, onExtract, editItem){
 
     onSubmit(payload).then(function(){
       saveBtn.disabled = false; saveBtn.textContent = isEdit ? 'שמירת שינויים' : 'הוספה';
+      showToast(isEdit ? '✅ נשמר!' : '✅ נוסף בהצלחה — כולם רואים את זה עכשיו');
       if (!isEdit){
         bg.querySelector('#gtitle').value = '';
         bg.querySelector('#gdetails').value = '';
@@ -487,8 +541,9 @@ function buildModal(onSubmit, onExtract, editItem){
         attachmentUrl = '';
         if (fileInput) fileInput.value = '';
         if (urlInput) urlInput.value = '';
-        var gfs = bg.querySelector('#gfileStatus'); if (gfs) gfs.textContent = 'ה-AI יזהה לבד את הסוג, היום, ופרטי המחיר.';
-        var gus = bg.querySelector('#gUrlStatus'); if (gus) gus.textContent = '';
+        if (urlWrap && urlToggle){ urlWrap.style.display = 'none'; urlToggle.style.display = 'block'; }
+        var gfs = bg.querySelector('#gfileStatus'); if (gfs) setStatus(gfs, '', false);
+        var gus = bg.querySelector('#gUrlStatus'); if (gus) setStatus(gus, '', false);
       }
       close();
     }).catch(function(err){
@@ -527,7 +582,7 @@ function mountAddUi(modal){
   fab.textContent = '+';
   document.body.appendChild(fab);
 
-  function openModal(){ modal.classList.add('show'); }
+  function openModal(){ if (modal.refreshNamePill) modal.refreshNamePill(); modal.classList.add('show'); }
   fab.addEventListener('click', openModal);
   var addBtn = document.getElementById('addBtn');
   if (addBtn) addBtn.addEventListener('click', openModal);
