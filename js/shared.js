@@ -309,6 +309,7 @@ function buildModal(onSubmit, onExtract, editItem){
   if (!showUpload) renderTypeButtons(TYPES, isEdit ? editItem.type : TYPES[0].id);
 
   var attachmentUrl = isEdit ? (editItem.attachmentUrl || '') : '';
+  var extracting = false; // true בזמן שקוראים קובץ/קישור ומחכים לתשובה מ-Claude — חוסם שמירה מוקדמת מדי
 
   function close(){
     bg.classList.remove('show');
@@ -318,6 +319,14 @@ function buildModal(onSubmit, onExtract, editItem){
   bg.querySelector('#gcancel').addEventListener('click', close);
 
   var fieldsWrap = bg.querySelector('#gfields');
+
+  function setSaveEnabled(){
+    var saveBtn = bg.querySelector('#gsave');
+    if (!saveBtn) return;
+    saveBtn.disabled = extracting;
+    saveBtn.textContent = extracting ? 'רגע, עדיין קוראים…' : (isEdit ? 'שמירת שינויים' : 'הוספה');
+  }
+
   var manualToggle = bg.querySelector('#gManualToggle');
   if (manualToggle){
     manualToggle.addEventListener('click', function(){
@@ -340,10 +349,14 @@ function buildModal(onSubmit, onExtract, editItem){
         return;
       }
       statusEl.textContent = 'קורא את המסמך…';
+      extracting = true;
+      setSaveEnabled();
       var reader = new FileReader();
       reader.onload = function(){
         var base64 = String(reader.result).split(',')[1] || '';
         onExtract({ mediaType: file.type, data: base64 }).then(function(fields){
+          extracting = false;
+          setSaveEnabled();
           statusEl.textContent = 'מולא אוטומטית מהקובץ — אפשר לערוך לפני השמירה.';
           fieldsWrap.style.display = 'block';
           renderTypeButtons(TYPES, fields.type);
@@ -353,11 +366,13 @@ function buildModal(onSubmit, onExtract, editItem){
           bg.querySelector('#gprice').value = fields.price || '';
           attachmentUrl = fields.attachmentUrl || '';
         }).catch(function(err){
+          extracting = false;
+          setSaveEnabled();
           statusEl.textContent = 'לא הצלחנו לחלץ מהקובץ הזה. אפשר להוסיף ידנית פעילות/הערה למעלה. (' + (err && err.message || '') + ')';
           console.error(err);
         });
       };
-      reader.onerror = function(){ statusEl.textContent = 'שגיאה בקריאת הקובץ.'; };
+      reader.onerror = function(){ extracting = false; setSaveEnabled(); statusEl.textContent = 'שגיאה בקריאת הקובץ.'; };
       reader.readAsDataURL(file);
     });
   }
@@ -373,8 +388,12 @@ function buildModal(onSubmit, onExtract, editItem){
       }
       statusEl.textContent = 'פותח את הקישור וקורא אותו…';
       urlGoBtn.disabled = true;
+      extracting = true;
+      setSaveEnabled();
       onExtract({ url: url }).then(function(fields){
         urlGoBtn.disabled = false;
+        extracting = false;
+        setSaveEnabled();
         statusEl.textContent = 'מולא אוטומטית מהקישור — אפשר לערוך לפני השמירה.';
         fieldsWrap.style.display = 'block';
         renderTypeButtons(TYPES, fields.type);
@@ -385,6 +404,8 @@ function buildModal(onSubmit, onExtract, editItem){
         bg.querySelector('#glink').value = url;
       }).catch(function(err){
         urlGoBtn.disabled = false;
+        extracting = false;
+        setSaveEnabled();
         statusEl.textContent = 'לא הצלחנו לפתוח או לקרוא את הקישור הזה. אפשר להעלות תמונה/PDF במקום, או להוסיף ידנית פעילות/הערה. (' + (err && err.message || '') + ')';
         console.error(err);
       });
@@ -404,9 +425,14 @@ function buildModal(onSubmit, onExtract, editItem){
   }
 
   bg.querySelector('#gsave').addEventListener('click', function(){
+    var errEl = bg.querySelector('#gerr');
+    if (extracting){
+      errEl.textContent = 'רגע — עדיין קוראים את הקובץ/קישור. אפשר לשמור ברגע שהשדות יתמלאו.';
+      errEl.classList.add('show');
+      return;
+    }
     var title = bg.querySelector('#gtitle').value.trim();
     var name = bg.querySelector('#gname').value.trim();
-    var errEl = bg.querySelector('#gerr');
     if (!title){
       errEl.textContent = 'צריך למלא כותרת.';
       errEl.classList.add('show');

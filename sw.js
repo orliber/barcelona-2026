@@ -6,7 +6,7 @@
   בכוונה לא נוגע בכלום שהוא לא מהאתר עצמו (Supabase, esm.sh וכו') — כל בקשה כזו
   עוברת ישר לרשת, בלי שה-service worker מתערב.
 */
-var CACHE_NAME = 'bcn26-shell-v24';
+var CACHE_NAME = 'bcn26-shell-v25';
 var SHELL_ASSETS = [
   './',
   './index.html',
@@ -53,15 +53,18 @@ self.addEventListener('fetch', function(event){
     return;
   }
 
-  // קבצי js/: מהמטמון קודם (מהיר, עובד אופליין), עם רענון ברקע לפעם הבאה.
+  // קבצי js/: קודם רשת, בדיוק כמו ה-HTML למעלה — לא cache-first. האתר משתנה הרבה
+  // (שדרוגים תכופים בזמן שמתכננים את הטיול) ו-cache-first היה גורם למי שכבר פתח את
+  // האתר פעם אחת להמשיך לקבל קוד JS ישן, גם אחרי שהבאנר "יצאה גרסה חדשה" רענן את
+  // ה-HTML — כי הוא לא נגע ב-cache הישן של js/app.js ו-js/shared.js. גיבוי מה-cache
+  // רק אם באמת אין רשת.
   event.respondWith(
-    caches.match(req).then(function(cached){
-      var fetchPromise = fetch(req).then(function(res){
-        var copy = res.clone();
-        caches.open(CACHE_NAME).then(function(cache){ cache.put(req, copy); });
-        return res;
-      }).catch(function(){ return cached; });
-      return cached || fetchPromise;
+    fetch(req).then(function(res){
+      var copy = res.clone();
+      caches.open(CACHE_NAME).then(function(cache){ cache.put(req, copy); });
+      return res;
+    }).catch(function(){
+      return caches.match(req);
     })
   );
 });
